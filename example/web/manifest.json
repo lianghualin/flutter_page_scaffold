@@ -1,0 +1,11 @@
+{
+    "name": "Main Area Template Playground",
+    "short_name": "playground",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#165DFF",
+    "description": "Main Area Template playground",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false
+}

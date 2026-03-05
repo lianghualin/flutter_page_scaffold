@@ -1,0 +1,16 @@
+name: main_area_template
+description: "A reusable main content area template widget with page titles, section headers, and theme-aware styling."
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.7
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
