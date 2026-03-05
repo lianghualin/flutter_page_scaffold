@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:main_area_template/main_area_template.dart';
+import 'package:flutter_page_scaffold/flutter_page_scaffold.dart';
 
 void main() {
   Widget wrapWithMaterial(Widget child) {

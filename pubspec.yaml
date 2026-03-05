@@ -1,4 +1,4 @@
-name: main_area_template
+name: flutter_page_scaffold
 description: "A reusable main content area template widget with page titles, section headers, and theme-aware styling."
 version: 0.1.0
 

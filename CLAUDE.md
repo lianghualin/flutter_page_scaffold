@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-`main_area_template` is a standalone Flutter widget package that provides reusable main content area layouts. It is designed to be consumed by `lnm_frontend` (and potentially other projects) as a path dependency.
+`flutter_page_scaffold` is a standalone Flutter widget package that provides reusable main content area layouts. It is designed to be consumed by `lnm_frontend` (and potentially other projects) as a path dependency.
 
 ## Build Commands
 
@@ -19,12 +19,12 @@ cd example && flutter run -d chrome
 
 ```
 lib/
-├── main_area_template.dart          # Barrel file (exports everything)
+├── flutter_page_scaffold.dart          # Barrel file (exports everything)
 └── src/
-    ├── main_area_template.dart      # MainAreaTemplate widget
+    ├── flutter_page_scaffold.dart      # MainAreaTemplate widget
     └── main_area_section.dart       # MainAreaSection widget
 test/
-├── main_area_template_test.dart     # 4 widget tests
+├── page_scaffold_test.dart     # 4 widget tests
 └── main_area_section_test.dart      # 3 widget tests
 example/
 └── lib/main.dart                    # Playground app (table, settings, dashboard demos)

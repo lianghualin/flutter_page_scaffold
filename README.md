@@ -1,4 +1,4 @@
-# main_area_template
+# flutter_page_scaffold
 
 A reusable Flutter widget package for consistent, theme-aware main content area layouts. Provides structured page templates with bold titles, section headers with accent bars, and grouped content cards.
 
@@ -17,8 +17,8 @@ Add as a path dependency in your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  main_area_template:
-    path: ../main_area_template
+  flutter_page_scaffold:
+    path: ../flutter_page_scaffold
 ```
 
 Then run:
@@ -32,7 +32,7 @@ flutter pub get
 ### Basic page layout
 
 ```dart
-import 'package:main_area_template/main_area_template.dart';
+import 'package:flutter_page_scaffold/flutter_page_scaffold.dart';
 
 MainAreaTemplate(
   title: 'Network Devices',

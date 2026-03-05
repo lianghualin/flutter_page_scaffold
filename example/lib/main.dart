@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:main_area_template/main_area_template.dart';
+import 'package:flutter_page_scaffold/flutter_page_scaffold.dart';
 
 // ---------------------------------------------------------------------------
 // Theme definitions
@@ -112,7 +112,7 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Main Area Template Playground',
+      title: 'Flutter Page Scaffold Playground',
       debugShowCheckedModeBanner: false,
       theme: _themeData,
       home: Scaffold(
@@ -189,7 +189,7 @@ class _ControlBar extends StatelessWidget {
           Icon(Icons.widgets_outlined, size: 20, color: colorScheme.primary),
           const SizedBox(width: 8),
           Text(
-            'MainAreaTemplate',
+            'PageScaffold',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
