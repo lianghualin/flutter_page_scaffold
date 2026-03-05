@@ -1,9 +1,17 @@
 name: flutter_page_scaffold
 description: "A reusable main content area template widget with page titles, section headers, and theme-aware styling."
 version: 0.1.0
+homepage: https://github.com/lianghualin/flutter_page_scaffold
+repository: https://github.com/lianghualin/flutter_page_scaffold
+issue_tracker: https://github.com/lianghualin/flutter_page_scaffold/issues
+topics:
+  - widget
+  - ui
+  - layout
+  - scaffold
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.5.0
   flutter: ">=1.17.0"
 
 dependencies:

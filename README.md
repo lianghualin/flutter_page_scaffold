@@ -2,7 +2,7 @@
 
 A reusable Flutter widget package for consistent, theme-aware main content area layouts. Provides structured page templates with bold titles, section headers with accent bars, and grouped content cards.
 
-![example](example/example.gif)
+![example](https://raw.githubusercontent.com/lianghualin/flutter_page_scaffold/main/example/example.gif)
 
 ## Features
 
@@ -13,12 +13,11 @@ A reusable Flutter widget package for consistent, theme-aware main content area 
 
 ## Installation
 
-Add as a path dependency in your `pubspec.yaml`:
+Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_page_scaffold:
-    path: ../flutter_page_scaffold
+  flutter_page_scaffold: ^0.1.0
 ```
 
 Then run:
