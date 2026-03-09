@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
 
+/// Data class representing a single tab in a [MainAreaTemplate].
+class PageTab {
+  /// The tab label displayed in the tab bar.
+  final String label;
+
+  /// Optional icon displayed before the label.
+  final IconData? icon;
+
+  /// The content widget shown when this tab is selected.
+  final Widget child;
+
+  const PageTab({required this.label, this.icon, required this.child});
+}
+
 /// A page-level template for the main content area.
 ///
 /// Provides:

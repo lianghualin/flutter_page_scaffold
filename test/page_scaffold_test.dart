@@ -62,4 +62,28 @@ void main() {
       expect(find.text('body'), findsOneWidget);
     });
   });
+
+  group('PageTab', () {
+    test('stores label, icon, and child', () {
+      const tab = PageTab(
+        label: 'Devices',
+        icon: Icons.router,
+        child: Text('content'),
+      );
+
+      expect(tab.label, 'Devices');
+      expect(tab.icon, Icons.router);
+      expect(tab.child, isA<Text>());
+    });
+
+    test('icon is optional', () {
+      const tab = PageTab(
+        label: 'Settings',
+        child: Text('settings'),
+      );
+
+      expect(tab.label, 'Settings');
+      expect(tab.icon, isNull);
+    });
+  });
 }
