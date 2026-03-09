@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Fix: Wrap root widget with `Material` to provide Material ancestor for child widgets (e.g. `DropdownButton`, `InkWell`, `TextField`)
+
 ## 0.1.0
 
 - Initial release

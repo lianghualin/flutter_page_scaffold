@@ -48,10 +48,11 @@ class MainAreaTemplate extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
+    return Material(
       color: theme.scaffoldBackgroundColor,
-      padding: outerPadding ?? const EdgeInsets.all(24),
-      child: Column(
+      child: Padding(
+        padding: outerPadding ?? const EdgeInsets.all(24),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Title area
@@ -85,6 +86,7 @@ class MainAreaTemplate extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
