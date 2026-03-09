@@ -96,7 +96,6 @@ enum AppTheme { light, dark, sunshine }
 
 class _PlaygroundAppState extends State<PlaygroundApp> {
   AppTheme _currentTheme = AppTheme.light;
-  int _selectedPage = 0;
 
   ThemeData get _themeData {
     switch (_currentTheme) {
@@ -118,19 +117,31 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
       home: Scaffold(
         body: Column(
           children: [
-            _ControlBar(
-              selectedIndex: _selectedPage,
+            _ThemeBar(
               currentTheme: _currentTheme,
-              onPageSelected: (i) => setState(() => _selectedPage = i),
               onThemeChanged: (t) => setState(() => _currentTheme = t),
             ),
             Expanded(
-              child: IndexedStack(
-                index: _selectedPage,
-                children: const [
-                  TableDemoPage(),
-                  SettingsDemoPage(),
-                  DashboardDemoPage(),
+              child: MainAreaTemplate(
+                title: 'Network Manager',
+                description: 'Manage network infrastructure.',
+                icon: Icons.router,
+                tabs: const [
+                  PageTab(
+                    label: 'Devices',
+                    icon: Icons.table_chart_outlined,
+                    child: TableDemoContent(),
+                  ),
+                  PageTab(
+                    label: 'Settings',
+                    icon: Icons.settings_outlined,
+                    child: SettingsDemoContent(),
+                  ),
+                  PageTab(
+                    label: 'Dashboard',
+                    icon: Icons.dashboard_outlined,
+                    child: DashboardDemoContent(),
+                  ),
                 ],
               ),
             ),
@@ -142,27 +153,17 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
 }
 
 // ---------------------------------------------------------------------------
-// Control Bar (top strip — keeps focus on the main area below)
+// Theme Bar (top strip — theme switcher only)
 // ---------------------------------------------------------------------------
 
-class _ControlBar extends StatelessWidget {
-  final int selectedIndex;
+class _ThemeBar extends StatelessWidget {
   final AppTheme currentTheme;
-  final ValueChanged<int> onPageSelected;
   final ValueChanged<AppTheme> onThemeChanged;
 
-  const _ControlBar({
-    required this.selectedIndex,
+  const _ThemeBar({
     required this.currentTheme,
-    required this.onPageSelected,
     required this.onThemeChanged,
   });
-
-  static const _pages = [
-    (icon: Icons.table_chart_outlined, label: 'Table'),
-    (icon: Icons.settings_outlined, label: 'Settings'),
-    (icon: Icons.dashboard_outlined, label: 'Dashboard'),
-  ];
 
   static const _themes = [
     (theme: AppTheme.light, label: 'Light'),
@@ -197,34 +198,6 @@ class _ControlBar extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 24),
-
-          // Divider
-          Container(width: 1, height: 24, color: colorScheme.outline),
-
-          const SizedBox(width: 16),
-
-          // Page tabs
-          Text(
-            'DEMO',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 10),
-          for (int i = 0; i < _pages.length; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            _TabChip(
-              icon: _pages[i].icon,
-              label: _pages[i].label,
-              selected: selectedIndex == i,
-              onTap: () => onPageSelected(i),
-            ),
-          ],
-
           const Spacer(),
 
           // Theme switcher
@@ -253,13 +226,11 @@ class _ControlBar extends StatelessWidget {
 }
 
 class _TabChip extends StatelessWidget {
-  final IconData? icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
   const _TabChip({
-    this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -279,30 +250,15 @@ class _TabChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 15,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 5),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              color: selected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),
@@ -314,8 +270,8 @@ class _TabChip extends StatelessWidget {
 // Demo Page 1: Table
 // ===========================================================================
 
-class TableDemoPage extends StatelessWidget {
-  const TableDemoPage({super.key});
+class TableDemoContent extends StatelessWidget {
+  const TableDemoContent({super.key});
 
   static const _devices = [
     ('Core', 'VLAN-100', 'SW-Core-01', '192.168.1.1', 48, 'L3 Switch'),
@@ -332,124 +288,112 @@ class TableDemoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return MainAreaTemplate(
-      title: 'Network Devices',
-      description: 'Manage network switches across all domains.',
-      icon: Icons.router,
-      actions: [
-        FilledButton.tonalIcon(
-          onPressed: () {},
-          icon: const Icon(Icons.refresh, size: 18),
-          label: const Text('Refresh'),
+    return Column(
+      children: [
+        // Toolbar section
+        MainAreaSection(
+          label: 'TOOLBAR',
+          child: Row(
+            children: [
+              FilledButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add Device'),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 260,
+                height: 36,
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search devices...',
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_devices.length} devices',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Data table section
+        MainAreaSection(
+          label: 'DATA',
+          expanded: true,
+          padding: EdgeInsets.zero,
+          child: SingleChildScrollView(
+            child: _DeviceTable(devices: _devices),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Pagination section
+        MainAreaSection(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Showing 1-${_devices.length} of ${_devices.length}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Row(
+                children: [
+                  _PaginationButton(
+                    icon: Icons.chevron_left,
+                    enabled: false,
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '1',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                  _PaginationButton(
+                    icon: Icons.chevron_right,
+                    enabled: false,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
-      child: Column(
-        children: [
-          // Toolbar section
-          MainAreaSection(
-            label: 'TOOLBAR',
-            child: Row(
-              children: [
-                FilledButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Device'),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 260,
-                  height: 36,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search devices...',
-                      prefixIcon: const Icon(Icons.search, size: 18),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colorScheme.outline),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: colorScheme.outline),
-                      ),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${_devices.length} devices',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Data table section
-          MainAreaSection(
-            label: 'DATA',
-            expanded: true,
-            padding: EdgeInsets.zero,
-            child: SingleChildScrollView(
-              child: _DeviceTable(devices: _devices),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Pagination section
-          MainAreaSection(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Showing 1-${_devices.length} of ${_devices.length}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Row(
-                  children: [
-                    _PaginationButton(
-                      icon: Icons.chevron_left,
-                      enabled: false,
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '1',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onPrimary,
-                        ),
-                      ),
-                    ),
-                    _PaginationButton(
-                      icon: Icons.chevron_right,
-                      enabled: false,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -638,14 +582,14 @@ class _PaginationButton extends StatelessWidget {
 // Demo Page 2: Settings
 // ===========================================================================
 
-class SettingsDemoPage extends StatefulWidget {
-  const SettingsDemoPage({super.key});
+class SettingsDemoContent extends StatefulWidget {
+  const SettingsDemoContent({super.key});
 
   @override
-  State<SettingsDemoPage> createState() => _SettingsDemoPageState();
+  State<SettingsDemoContent> createState() => _SettingsDemoContentState();
 }
 
-class _SettingsDemoPageState extends State<SettingsDemoPage> {
+class _SettingsDemoContentState extends State<SettingsDemoContent> {
   String _maxFileSize = '100 MB';
   String _retentionDays = '90 days';
 
@@ -653,125 +597,113 @@ class _SettingsDemoPageState extends State<SettingsDemoPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return MainAreaTemplate(
-      title: 'Log Settings',
-      description: 'Configure log storage and retention policies.',
-      icon: Icons.settings_outlined,
-      actions: [
-        FilledButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.save_outlined, size: 18),
-          label: const Text('Save'),
+    return Column(
+      children: [
+        // Storage limits section
+        MainAreaSection(
+          label: 'STORAGE LIMITS',
+          child: Row(
+            children: [
+              Expanded(
+                child: _SettingsDropdown(
+                  label: 'Max Log File Size',
+                  value: _maxFileSize,
+                  options: const [
+                    '50 MB',
+                    '100 MB',
+                    '200 MB',
+                    '500 MB',
+                    '1 GB',
+                  ],
+                  onChanged: (v) => setState(() => _maxFileSize = v),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: _SettingsDropdown(
+                  label: 'Retention Period',
+                  value: _retentionDays,
+                  options: const [
+                    '30 days',
+                    '60 days',
+                    '90 days',
+                    '180 days',
+                    '365 days',
+                  ],
+                  onChanged: (v) => setState(() => _retentionDays = v),
+                ),
+              ),
+              const Expanded(child: SizedBox()),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Status section
+        MainAreaSection(
+          label: 'STATUS',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Disk Usage',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    '34.2 GB / 100 GB',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: 0.342,
+                  minHeight: 10,
+                  backgroundColor: colorScheme.outline.withValues(alpha: 0.3),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _StatusItem(
+                    label: 'System Logs',
+                    value: '12.8 GB',
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 32),
+                  _StatusItem(
+                    label: 'Audit Logs',
+                    value: '8.4 GB',
+                    color: colorScheme.secondary,
+                  ),
+                  const SizedBox(width: 32),
+                  _StatusItem(
+                    label: 'Alert Logs',
+                    value: '13.0 GB',
+                    color: colorScheme.tertiary,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
-      child: Column(
-        children: [
-          // Storage limits section
-          MainAreaSection(
-            label: 'STORAGE LIMITS',
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SettingsDropdown(
-                    label: 'Max Log File Size',
-                    value: _maxFileSize,
-                    options: const [
-                      '50 MB',
-                      '100 MB',
-                      '200 MB',
-                      '500 MB',
-                      '1 GB',
-                    ],
-                    onChanged: (v) => setState(() => _maxFileSize = v),
-                  ),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: _SettingsDropdown(
-                    label: 'Retention Period',
-                    value: _retentionDays,
-                    options: const [
-                      '30 days',
-                      '60 days',
-                      '90 days',
-                      '180 days',
-                      '365 days',
-                    ],
-                    onChanged: (v) => setState(() => _retentionDays = v),
-                  ),
-                ),
-                const Expanded(child: SizedBox()),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Status section
-          MainAreaSection(
-            label: 'STATUS',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Disk Usage',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      '34.2 GB / 100 GB',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: 0.342,
-                    minHeight: 10,
-                    backgroundColor: colorScheme.outline.withValues(alpha: 0.3),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      colorScheme.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _StatusItem(
-                      label: 'System Logs',
-                      value: '12.8 GB',
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(width: 32),
-                    _StatusItem(
-                      label: 'Audit Logs',
-                      value: '8.4 GB',
-                      color: colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 32),
-                    _StatusItem(
-                      label: 'Alert Logs',
-                      value: '13.0 GB',
-                      color: colorScheme.tertiary,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -900,104 +832,99 @@ class _StatusItem extends StatelessWidget {
 // Demo Page 3: Dashboard
 // ===========================================================================
 
-class DashboardDemoPage extends StatelessWidget {
-  const DashboardDemoPage({super.key});
+class DashboardDemoContent extends StatelessWidget {
+  const DashboardDemoContent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MainAreaTemplate(
-      title: 'System Overview',
-      description: 'Real-time system health and statistics.',
-      icon: Icons.dashboard_outlined,
-      child: Column(
-        children: [
-          // Statistics section
-          MainAreaSection(
-            label: 'STATISTICS',
-            child: Row(
-              children: const [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Total Devices',
-                    value: '128',
-                    icon: Icons.devices,
-                    trend: '+4 this week',
-                    trendPositive: true,
-                  ),
+    return Column(
+      children: [
+        // Statistics section
+        MainAreaSection(
+          label: 'STATISTICS',
+          child: Row(
+            children: const [
+              Expanded(
+                child: _StatCard(
+                  label: 'Total Devices',
+                  value: '128',
+                  icon: Icons.devices,
+                  trend: '+4 this week',
+                  trendPositive: true,
                 ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Online',
-                    value: '121',
-                    icon: Icons.check_circle_outline,
-                    trend: '94.5% uptime',
-                    trendPositive: true,
-                  ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: _StatCard(
+                  label: 'Online',
+                  value: '121',
+                  icon: Icons.check_circle_outline,
+                  trend: '94.5% uptime',
+                  trendPositive: true,
                 ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Warnings',
-                    value: '5',
-                    icon: Icons.warning_amber_outlined,
-                    trend: '-2 from yesterday',
-                    trendPositive: true,
-                  ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: _StatCard(
+                  label: 'Warnings',
+                  value: '5',
+                  icon: Icons.warning_amber_outlined,
+                  trend: '-2 from yesterday',
+                  trendPositive: true,
                 ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Critical',
-                    value: '2',
-                    icon: Icons.error_outline,
-                    trend: '+1 from yesterday',
-                    trendPositive: false,
-                  ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: _StatCard(
+                  label: 'Critical',
+                  value: '2',
+                  icon: Icons.error_outline,
+                  trend: '+1 from yesterday',
+                  trendPositive: false,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-          // Recent alerts section
-          MainAreaSection(
-            label: 'RECENT ALERTS',
-            expanded: true,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: const [
-                _AlertItem(
-                  severity: _AlertSeverity.critical,
-                  message: 'SW-Core-01 port Gi0/48 link down',
-                  timestamp: '2 min ago',
-                ),
-                _AlertItem(
-                  severity: _AlertSeverity.critical,
-                  message: 'FW-Edge-01 CPU utilization above 95%',
-                  timestamp: '8 min ago',
-                ),
-                _AlertItem(
-                  severity: _AlertSeverity.warning,
-                  message: 'SW-Access-02 memory usage at 82%',
-                  timestamp: '15 min ago',
-                ),
-                _AlertItem(
-                  severity: _AlertSeverity.warning,
-                  message: 'RT-WAN-01 BGP neighbor flap detected',
-                  timestamp: '23 min ago',
-                ),
-                _AlertItem(
-                  severity: _AlertSeverity.info,
-                  message: 'SW-Server-01 firmware update available (v4.2.1)',
-                  timestamp: '1 hour ago',
-                ),
-              ],
-            ),
+        // Recent alerts section
+        MainAreaSection(
+          label: 'RECENT ALERTS',
+          expanded: true,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: const [
+              _AlertItem(
+                severity: _AlertSeverity.critical,
+                message: 'SW-Core-01 port Gi0/48 link down',
+                timestamp: '2 min ago',
+              ),
+              _AlertItem(
+                severity: _AlertSeverity.critical,
+                message: 'FW-Edge-01 CPU utilization above 95%',
+                timestamp: '8 min ago',
+              ),
+              _AlertItem(
+                severity: _AlertSeverity.warning,
+                message: 'SW-Access-02 memory usage at 82%',
+                timestamp: '15 min ago',
+              ),
+              _AlertItem(
+                severity: _AlertSeverity.warning,
+                message: 'RT-WAN-01 BGP neighbor flap detected',
+                timestamp: '23 min ago',
+              ),
+              _AlertItem(
+                severity: _AlertSeverity.info,
+                message: 'SW-Server-01 firmware update available (v4.2.1)',
+                timestamp: '1 hour ago',
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
