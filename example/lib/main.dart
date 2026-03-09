@@ -96,6 +96,8 @@ enum AppTheme { light, dark, sunshine }
 
 class _PlaygroundAppState extends State<PlaygroundApp> {
   AppTheme _currentTheme = AppTheme.light;
+  bool _showTitle = true;
+  bool _showTabs = true;
 
   ThemeData get _themeData {
     switch (_currentTheme) {
@@ -117,15 +119,21 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
       home: Scaffold(
         body: Column(
           children: [
-            _ThemeBar(
+            _ControlBar(
               currentTheme: _currentTheme,
               onThemeChanged: (t) => setState(() => _currentTheme = t),
+              showTitle: _showTitle,
+              onShowTitleChanged: (v) => setState(() => _showTitle = v),
+              showTabs: _showTabs,
+              onShowTabsChanged: (v) => setState(() => _showTabs = v),
             ),
             Expanded(
               child: MainAreaTemplate(
                 title: 'Network Manager',
                 description: 'Manage network infrastructure.',
                 icon: Icons.router,
+                showTitle: _showTitle,
+                showTabs: _showTabs,
                 tabs: const [
                   PageTab(
                     label: 'Devices',
@@ -153,16 +161,24 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
 }
 
 // ---------------------------------------------------------------------------
-// Theme Bar (top strip — theme switcher only)
+// Control Bar (top strip — visibility toggles + theme switcher)
 // ---------------------------------------------------------------------------
 
-class _ThemeBar extends StatelessWidget {
+class _ControlBar extends StatelessWidget {
   final AppTheme currentTheme;
   final ValueChanged<AppTheme> onThemeChanged;
+  final bool showTitle;
+  final ValueChanged<bool> onShowTitleChanged;
+  final bool showTabs;
+  final ValueChanged<bool> onShowTabsChanged;
 
-  const _ThemeBar({
+  const _ControlBar({
     required this.currentTheme,
     required this.onThemeChanged,
+    required this.showTitle,
+    required this.onShowTitleChanged,
+    required this.showTabs,
+    required this.onShowTabsChanged,
   });
 
   static const _themes = [
@@ -196,6 +212,23 @@ class _ThemeBar extends StatelessWidget {
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
             ),
+          ),
+
+          const SizedBox(width: 24),
+          Container(width: 1, height: 24, color: colorScheme.outline),
+          const SizedBox(width: 16),
+
+          // Visibility toggles
+          _ToggleChip(
+            label: 'Title',
+            value: showTitle,
+            onChanged: onShowTitleChanged,
+          ),
+          const SizedBox(width: 8),
+          _ToggleChip(
+            label: 'Tabs',
+            value: showTabs,
+            onChanged: onShowTabsChanged,
           ),
 
           const Spacer(),
@@ -259,6 +292,60 @@ class _TabChip extends StatelessWidget {
                   ? colorScheme.primary
                   : colorScheme.onSurfaceVariant,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ToggleChip extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _ToggleChip({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: value
+          ? colorScheme.primary.withValues(alpha: 0.12)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                value ? Icons.visibility : Icons.visibility_off,
+                size: 14,
+                color: value
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: value ? FontWeight.w600 : FontWeight.w400,
+                  color: value
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ),
