@@ -1,3 +1,10 @@
+## 0.2.1
+
+- Redesign tab bar: moved inside the content card with underline indicator for better visibility
+- Increased tab text (14px) and icon (18px) sizes for improved readability
+- Added full-width divider between tab bar and content
+- Fixed sharp corner artifact on first tab's ink ripple in rounded card
+
 ## 0.2.0
 
 - Feat: Add multi-page tab navigation with `tabs` parameter and `PageTab` class

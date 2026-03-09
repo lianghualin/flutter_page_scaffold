@@ -117,6 +117,8 @@ class _MainAreaTemplateState extends State<MainAreaTemplate> {
           )
         : widget.child!;
 
+    final showTabBarInCard = widget.tabs != null && widget.showTabs;
+
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: Padding(
@@ -131,17 +133,7 @@ class _MainAreaTemplateState extends State<MainAreaTemplate> {
                 icon: widget.icon,
                 actions: widget.actions,
               ),
-            if (widget.showTitle &&
-                (widget.tabs != null && widget.showTabs))
-              const SizedBox(height: 12),
-            if (widget.tabs != null && widget.showTabs)
-              _PageTabBar(
-                tabs: widget.tabs!,
-                selectedIndex: _selectedIndex,
-                onTabSelected: _onTabSelected,
-              ),
-            if (widget.showTitle || (widget.tabs != null && widget.showTabs))
-              const SizedBox(height: 16),
+            if (widget.showTitle) const SizedBox(height: 16),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -157,9 +149,23 @@ class _MainAreaTemplateState extends State<MainAreaTemplate> {
                   ],
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Padding(
-                  padding: widget.cardPadding ?? const EdgeInsets.all(20),
-                  child: contentChild,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showTabBarInCard)
+                      _PageTabBar(
+                        tabs: widget.tabs!,
+                        selectedIndex: _selectedIndex,
+                        onTabSelected: _onTabSelected,
+                      ),
+                    Expanded(
+                      child: Padding(
+                        padding:
+                            widget.cardPadding ?? const EdgeInsets.all(20),
+                        child: contentChild,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -183,18 +189,29 @@ class _PageTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (int i = 0; i < tabs.length; i++) ...[
-          if (i > 0) const SizedBox(width: 4),
-          _PageTabChip(
-            label: tabs[i].label,
-            icon: tabs[i].icon,
-            selected: selectedIndex == i,
-            onTap: () => onTabSelected(i),
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: colorScheme.outlineVariant,
+            width: 1,
           ),
+        ),
+      ),
+      child: Row(
+        children: [
+          for (int i = 0; i < tabs.length; i++)
+            _PageTabChip(
+              label: tabs[i].label,
+              icon: tabs[i].icon,
+              selected: selectedIndex == i,
+              onTap: () => onTabSelected(i),
+              isFirst: i == 0,
+            ),
         ],
-      ],
+      ),
     );
   }
 }
@@ -204,53 +221,59 @@ class _PageTabChip extends StatelessWidget {
   final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
+  final bool isFirst;
 
   const _PageTabChip({
     required this.label,
     this.icon,
     required this.selected,
     required this.onTap,
+    this.isFirst = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final cornerRadius =
+        isFirst ? const BorderRadius.only(topLeft: Radius.circular(12)) : null;
 
-    return Material(
-      color: selected
-          ? colorScheme.primary.withValues(alpha: 0.12)
-          : Colors.transparent,
-      borderRadius: BorderRadius.circular(6),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 15,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 5),
-              ],
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: cornerRadius,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? colorScheme.primary : Colors.transparent,
+              width: 2,
+            ),
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );
