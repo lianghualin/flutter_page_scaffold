@@ -76,6 +76,82 @@ void main() {
       expect(find.text('body'), findsOneWidget);
     });
 
+    testWidgets('renders tabs when provided', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Tabbed',
+          tabs: const [
+            PageTab(label: 'Devices', icon: Icons.router, child: Text('devices content')),
+            PageTab(label: 'Settings', icon: Icons.settings, child: Text('settings content')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Devices'), findsOneWidget);
+      expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('devices content'), findsOneWidget);
+    });
+
+    testWidgets('switches tab content on tap', (tester) async {
+      int? changedIndex;
+
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Tabbed',
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+          onTabChanged: (i) => changedIndex = i,
+        ),
+      ));
+
+      // Tab A is visible initially (IndexedStack shows both but only first is "visible")
+      expect(find.text('content A'), findsOneWidget);
+
+      // Tap Tab B
+      await tester.tap(find.text('Tab B'));
+      await tester.pumpAndSettle();
+
+      expect(changedIndex, 1);
+      expect(find.text('content B'), findsOneWidget);
+    });
+
+    testWidgets('hides tab bar when showTabs is false', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Hidden Tabs',
+          showTabs: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Tab A'), findsNothing);
+      expect(find.text('Tab B'), findsNothing);
+      // Content still renders (first tab)
+      expect(find.text('content A'), findsOneWidget);
+    });
+
+    testWidgets('respects initialTabIndex', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Initial Tab',
+          initialTabIndex: 1,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      // Both exist in IndexedStack, but index 1 is shown
+      // Verify Tab B's text is present
+      expect(find.text('content B'), findsOneWidget);
+    });
+
     testWidgets('renders without description or icon', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
