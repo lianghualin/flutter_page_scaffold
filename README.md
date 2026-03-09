@@ -84,6 +84,42 @@ MainAreaTemplate(
 )
 ```
 
+### Tabbed page layout
+
+```dart
+MainAreaTemplate(
+  title: 'Network Manager',
+  description: 'Manage network infrastructure.',
+  icon: Icons.router,
+  tabs: [
+    PageTab(
+      label: 'Devices',
+      icon: Icons.table_chart_outlined,
+      child: Column(children: [/* device list content */]),
+    ),
+    PageTab(
+      label: 'Settings',
+      icon: Icons.settings_outlined,
+      child: Column(children: [/* settings content */]),
+    ),
+  ],
+  onTabChanged: (index) => print('Switched to tab $index'),
+)
+```
+
+### Tabs without title (compact mode)
+
+```dart
+MainAreaTemplate(
+  title: 'Manager',        // still required but hidden
+  showTitle: false,
+  tabs: [
+    PageTab(label: 'Tab A', child: ContentA()),
+    PageTab(label: 'Tab B', child: ContentB()),
+  ],
+)
+```
+
 ## API Reference
 
 ### MainAreaTemplate
@@ -94,9 +130,24 @@ MainAreaTemplate(
 | `description` | `String?` | No | Subtle muted subtitle below the title |
 | `icon` | `IconData?` | No | Icon displayed before the title in a tinted container |
 | `actions` | `List<Widget>?` | No | Action buttons displayed to the right of the title |
-| `child` | `Widget` | Yes | Main content, typically a Column of `MainAreaSection` widgets |
+| `child` | `Widget?` | No* | Main content, typically a Column of `MainAreaSection` widgets |
 | `outerPadding` | `EdgeInsetsGeometry?` | No | Padding around the template (default: 24) |
 | `cardPadding` | `EdgeInsetsGeometry?` | No | Padding inside the content card (default: 20) |
+| `tabs` | `List<PageTab>?` | No | Tab definitions for multi-page navigation. When null, uses `child` |
+| `showTitle` | `bool` | No | Show/hide the title row (default: true) |
+| `showTabs` | `bool` | No | Show/hide the tab bar (default: true, only when `tabs` is provided) |
+| `initialTabIndex` | `int` | No | Starting tab index (default: 0) |
+| `onTabChanged` | `ValueChanged<int>?` | No | Callback when selected tab changes |
+
+\* Required when `tabs` is null.
+
+### PageTab
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `label` | `String` | Yes | Tab label displayed in the tab bar |
+| `icon` | `IconData?` | No | Icon displayed before the label |
+| `child` | `Widget` | Yes | Content widget shown when this tab is selected |
 
 ### MainAreaSection
 
