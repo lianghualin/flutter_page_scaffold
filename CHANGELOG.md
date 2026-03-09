@@ -1,3 +1,12 @@
+## 0.2.0
+
+- Feat: Add multi-page tab navigation with `tabs` parameter and `PageTab` class
+- Feat: Add `showTitle` parameter to toggle title row visibility
+- Feat: Add `showTabs` parameter to toggle tab bar visibility
+- Feat: Add `initialTabIndex` and `onTabChanged` for tab state management
+- Uses `IndexedStack` to preserve tab state across switches
+- Fully backward compatible — existing single-page usage unchanged
+
 ## 0.1.1
 
 - Fix: Wrap root widget with `Material` to provide Material ancestor for child widgets (e.g. `DropdownButton`, `InkWell`, `TextField`)
