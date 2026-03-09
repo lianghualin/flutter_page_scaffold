@@ -50,6 +50,32 @@ void main() {
       expect(find.text('Save'), findsOneWidget);
     });
 
+    testWidgets('existing behavior unchanged when tabs is null', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'No Tabs',
+          showTitle: true,
+          child: const Text('single page'),
+        ),
+      ));
+
+      expect(find.text('No Tabs'), findsOneWidget);
+      expect(find.text('single page'), findsOneWidget);
+    });
+
+    testWidgets('hides title when showTitle is false', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Hidden Title',
+          showTitle: false,
+          child: const Text('body'),
+        ),
+      ));
+
+      expect(find.text('Hidden Title'), findsNothing);
+      expect(find.text('body'), findsOneWidget);
+    });
+
     testWidgets('renders without description or icon', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(

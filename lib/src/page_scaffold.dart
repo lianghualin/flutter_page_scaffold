@@ -21,10 +21,11 @@ class PageTab {
 /// - Subtle description text
 /// - Optional action buttons in title row
 /// - A content card with rounded corners and shadow
+/// - Optional tabbed navigation via [tabs] parameter
 ///
 /// The [child] is placed inside a themed card container.
 /// Use [MainAreaSection] widgets inside the child for grouped content.
-class MainAreaTemplate extends StatelessWidget {
+class MainAreaTemplate extends StatefulWidget {
   /// Page title, displayed large and bold.
   final String title;
 
@@ -37,8 +38,9 @@ class MainAreaTemplate extends StatelessWidget {
   /// Optional action widgets displayed to the right of the title row.
   final List<Widget>? actions;
 
-  /// The main page content. Typically a Column of [MainAreaSection] widgets.
-  final Widget child;
+  /// The main page content. Used when [tabs] is null.
+  /// Ignored when [tabs] is provided.
+  final Widget? child;
 
   /// Padding around the entire template. Defaults to EdgeInsets.all(24).
   final EdgeInsetsGeometry? outerPadding;
@@ -46,63 +48,142 @@ class MainAreaTemplate extends StatelessWidget {
   /// Padding inside the content card. Defaults to EdgeInsets.all(20).
   final EdgeInsetsGeometry? cardPadding;
 
+  /// Optional list of tabs for multi-page navigation.
+  /// When provided, renders a tab bar and uses [IndexedStack] to swap content.
+  /// When null, falls back to single-page mode using [child].
+  final List<PageTab>? tabs;
+
+  /// Whether to show the title row. Defaults to true.
+  final bool showTitle;
+
+  /// Whether to show the tab bar. Defaults to true.
+  /// Only has effect when [tabs] is provided.
+  final bool showTabs;
+
+  /// The initial tab index. Defaults to 0.
+  final int initialTabIndex;
+
+  /// Called when the selected tab changes.
+  final ValueChanged<int>? onTabChanged;
+
   const MainAreaTemplate({
     super.key,
     required this.title,
     this.description,
     this.icon,
     this.actions,
-    required this.child,
+    this.child,
     this.outerPadding,
     this.cardPadding,
-  });
+    this.tabs,
+    this.showTitle = true,
+    this.showTabs = true,
+    this.initialTabIndex = 0,
+    this.onTabChanged,
+  }) : assert(
+         tabs != null || child != null,
+         'Either tabs or child must be provided',
+       );
+
+  @override
+  State<MainAreaTemplate> createState() => _MainAreaTemplateState();
+}
+
+class _MainAreaTemplateState extends State<MainAreaTemplate> {
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialTabIndex;
+  }
+
+  void _onTabSelected(int index) {
+    if (index != _selectedIndex) {
+      setState(() => _selectedIndex = index);
+      widget.onTabChanged?.call(index);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final contentChild = widget.tabs != null
+        ? IndexedStack(
+            index: _selectedIndex,
+            children: widget.tabs!.map((t) => t.child).toList(),
+          )
+        : widget.child!;
+
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: Padding(
-        padding: outerPadding ?? const EdgeInsets.all(24),
+        padding: widget.outerPadding ?? const EdgeInsets.all(24),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title area
-          _TitleArea(
-            title: title,
-            description: description,
-            icon: icon,
-            actions: actions,
-          ),
-          const SizedBox(height: 20),
-          // Content card
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.shadow.withValues(alpha: 0.06),
-                    offset: const Offset(0, 2),
-                    blurRadius: 12,
-                    spreadRadius: 0,
-                  ),
-                ],
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.showTitle)
+              _TitleArea(
+                title: widget.title,
+                description: widget.description,
+                icon: widget.icon,
+                actions: widget.actions,
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: cardPadding ?? const EdgeInsets.all(20),
-                child: child,
+            if (widget.showTitle &&
+                (widget.tabs != null && widget.showTabs))
+              const SizedBox(height: 12),
+            if (widget.tabs != null && widget.showTabs)
+              _PageTabBar(
+                tabs: widget.tabs!,
+                selectedIndex: _selectedIndex,
+                onTabSelected: _onTabSelected,
+              ),
+            if (widget.showTitle || (widget.tabs != null && widget.showTabs))
+              const SizedBox(height: 16),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.shadow.withValues(alpha: 0.06),
+                      offset: const Offset(0, 2),
+                      blurRadius: 12,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: widget.cardPadding ?? const EdgeInsets.all(20),
+                  child: contentChild,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _PageTabBar extends StatelessWidget {
+  final List<PageTab> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+
+  const _PageTabBar({
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onTabSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox.shrink(); // Stub — full implementation in next task
   }
 }
 
