@@ -98,6 +98,8 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
   AppTheme _currentTheme = AppTheme.light;
   bool _showTitle = true;
   bool _showTabs = true;
+  bool _maintainState = true;
+  bool _animate = false;
 
   ThemeData get _themeData {
     switch (_currentTheme) {
@@ -126,6 +128,10 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
               onShowTitleChanged: (v) => setState(() => _showTitle = v),
               showTabs: _showTabs,
               onShowTabsChanged: (v) => setState(() => _showTabs = v),
+              maintainState: _maintainState,
+              onMaintainStateChanged: (v) => setState(() => _maintainState = v),
+              animate: _animate,
+              onAnimateChanged: (v) => setState(() => _animate = v),
             ),
             Expanded(
               child: MainAreaTemplate(
@@ -134,6 +140,10 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
                 icon: Icons.router,
                 showTitle: _showTitle,
                 showTabs: _showTabs,
+                maintainState: _maintainState,
+                tabTransitionDuration: _animate
+                    ? const Duration(milliseconds: 200)
+                    : null,
                 tabs: const [
                   PageTab(
                     label: 'Devices',
@@ -171,6 +181,10 @@ class _ControlBar extends StatelessWidget {
   final ValueChanged<bool> onShowTitleChanged;
   final bool showTabs;
   final ValueChanged<bool> onShowTabsChanged;
+  final bool maintainState;
+  final ValueChanged<bool> onMaintainStateChanged;
+  final bool animate;
+  final ValueChanged<bool> onAnimateChanged;
 
   const _ControlBar({
     required this.currentTheme,
@@ -179,6 +193,10 @@ class _ControlBar extends StatelessWidget {
     required this.onShowTitleChanged,
     required this.showTabs,
     required this.onShowTabsChanged,
+    required this.maintainState,
+    required this.onMaintainStateChanged,
+    required this.animate,
+    required this.onAnimateChanged,
   });
 
   static const _themes = [
@@ -229,6 +247,18 @@ class _ControlBar extends StatelessWidget {
             label: 'Tabs',
             value: showTabs,
             onChanged: onShowTabsChanged,
+          ),
+          const SizedBox(width: 8),
+          _ToggleChip(
+            label: 'Keep Alive',
+            value: maintainState,
+            onChanged: onMaintainStateChanged,
+          ),
+          const SizedBox(width: 8),
+          _ToggleChip(
+            label: 'Animate',
+            value: animate,
+            onChanged: onAnimateChanged,
           ),
 
           const Spacer(),
