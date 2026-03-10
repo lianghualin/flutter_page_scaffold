@@ -1,3 +1,10 @@
+## 0.2.2
+
+- Feat: Add `maintainState` parameter — set to `false` to dispose unselected tabs instead of keeping all alive via `IndexedStack`
+- Feat: Add `tabTransitionDuration` parameter — enables fade-in animation when switching tabs
+- Feat: Add `tabBarBuilder` callback and `TabBarBuilder` typedef — replace the default tab bar with a fully custom widget
+- Fix: Use `TickerProviderStateMixin` to support runtime animation toggling without ticker errors
+
 ## 0.2.1
 
 - Redesign tab bar: moved inside the content card with underline indicator for better visibility
