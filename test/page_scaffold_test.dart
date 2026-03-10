@@ -152,6 +152,59 @@ void main() {
       expect(find.text('content B'), findsOneWidget);
     });
 
+    testWidgets('maintainState true keeps all tabs mounted', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'KeepAlive',
+          maintainState: true,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      // IndexedStack keeps both children in the tree (offstage but mounted)
+      expect(find.text('content A', skipOffstage: false), findsOneWidget);
+      expect(find.text('content B', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('maintainState false only renders selected tab', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Lazy',
+          maintainState: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      // Only selected tab's content is in the tree
+      expect(find.text('content A'), findsOneWidget);
+      expect(find.text('content B'), findsNothing);
+    });
+
+    testWidgets('maintainState false switches content on tap', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Lazy Switch',
+          maintainState: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Tab B'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('content A'), findsNothing);
+      expect(find.text('content B'), findsOneWidget);
+    });
+
     testWidgets('renders without description or icon', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(

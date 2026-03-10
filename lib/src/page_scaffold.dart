@@ -66,6 +66,11 @@ class MainAreaTemplate extends StatefulWidget {
   /// Called when the selected tab changes.
   final ValueChanged<int>? onTabChanged;
 
+  /// Whether to keep all tab children mounted when switching tabs.
+  /// When true (default), uses [IndexedStack] to preserve tab state.
+  /// When false, only the selected tab's child is mounted.
+  final bool maintainState;
+
   const MainAreaTemplate({
     super.key,
     required this.title,
@@ -80,6 +85,7 @@ class MainAreaTemplate extends StatefulWidget {
     this.showTabs = true,
     this.initialTabIndex = 0,
     this.onTabChanged,
+    this.maintainState = true,
   }) : assert(
          tabs != null || child != null,
          'Either tabs or child must be provided',
@@ -110,12 +116,19 @@ class _MainAreaTemplateState extends State<MainAreaTemplate> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final contentChild = widget.tabs != null
-        ? IndexedStack(
-            index: _selectedIndex,
-            children: widget.tabs!.map((t) => t.child).toList(),
-          )
-        : widget.child!;
+    Widget contentChild;
+    if (widget.tabs != null) {
+      if (widget.maintainState) {
+        contentChild = IndexedStack(
+          index: _selectedIndex,
+          children: widget.tabs!.map((t) => t.child).toList(),
+        );
+      } else {
+        contentChild = widget.tabs![_selectedIndex].child;
+      }
+    } else {
+      contentChild = widget.child!;
+    }
 
     final showTabBarInCard = widget.tabs != null && widget.showTabs;
 
