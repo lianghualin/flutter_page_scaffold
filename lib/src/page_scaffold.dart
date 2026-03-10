@@ -118,7 +118,7 @@ class MainAreaTemplate extends StatefulWidget {
 }
 
 class _MainAreaTemplateState extends State<MainAreaTemplate>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late int _selectedIndex;
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
