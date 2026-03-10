@@ -71,6 +71,11 @@ class MainAreaTemplate extends StatefulWidget {
   /// When false, only the selected tab's child is mounted.
   final bool maintainState;
 
+  /// Duration of the fade animation when switching tabs.
+  /// When null (default), tab switches are instant with no animation.
+  /// Set to a duration (e.g. `Duration(milliseconds: 200)`) to enable a fade-in transition.
+  final Duration? tabTransitionDuration;
+
   const MainAreaTemplate({
     super.key,
     required this.title,
@@ -86,6 +91,7 @@ class MainAreaTemplate extends StatefulWidget {
     this.initialTabIndex = 0,
     this.onTabChanged,
     this.maintainState = true,
+    this.tabTransitionDuration,
   }) : assert(
          tabs != null || child != null,
          'Either tabs or child must be provided',
@@ -95,18 +101,55 @@ class MainAreaTemplate extends StatefulWidget {
   State<MainAreaTemplate> createState() => _MainAreaTemplateState();
 }
 
-class _MainAreaTemplateState extends State<MainAreaTemplate> {
+class _MainAreaTemplateState extends State<MainAreaTemplate>
+    with SingleTickerProviderStateMixin {
   late int _selectedIndex;
+  AnimationController? _animationController;
+  Animation<double>? _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTabIndex;
+    _initAnimation();
+  }
+
+  void _initAnimation() {
+    final duration = widget.tabTransitionDuration;
+    if (duration != null && duration > Duration.zero) {
+      _animationController = AnimationController(
+        duration: duration,
+        vsync: this,
+      );
+      _fadeAnimation = CurvedAnimation(
+        parent: _animationController!,
+        curve: Curves.easeInOut,
+      );
+      _animationController!.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(MainAreaTemplate oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tabTransitionDuration != oldWidget.tabTransitionDuration) {
+      _animationController?.dispose();
+      _animationController = null;
+      _fadeAnimation = null;
+      _initAnimation();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
   }
 
   void _onTabSelected(int index) {
     if (index != _selectedIndex) {
       setState(() => _selectedIndex = index);
+      _animationController?.forward(from: 0.0);
       widget.onTabChanged?.call(index);
     }
   }
@@ -128,6 +171,13 @@ class _MainAreaTemplateState extends State<MainAreaTemplate> {
       }
     } else {
       contentChild = widget.child!;
+    }
+
+    if (_fadeAnimation != null && widget.tabs != null) {
+      contentChild = FadeTransition(
+        opacity: _fadeAnimation!,
+        child: contentChild,
+      );
     }
 
     final showTabBarInCard = widget.tabs != null && widget.showTabs;

@@ -205,6 +205,77 @@ void main() {
       expect(find.text('content B'), findsOneWidget);
     });
 
+    testWidgets('no FadeTransition when tabTransitionDuration is null', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'No Animation',
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      final fadeFinder = find.descendant(
+        of: find.byType(MainAreaTemplate),
+        matching: find.byType(FadeTransition),
+      );
+      expect(fadeFinder, findsNothing);
+    });
+
+    testWidgets('FadeTransition present when tabTransitionDuration is set', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Animated',
+          tabTransitionDuration: const Duration(milliseconds: 200),
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      final fadeFinder = find.descendant(
+        of: find.byType(MainAreaTemplate),
+        matching: find.byType(FadeTransition),
+      );
+      expect(fadeFinder, findsOneWidget);
+      final fade = tester.widget<FadeTransition>(fadeFinder);
+      expect(fade.opacity.value, 1.0);
+    });
+
+    testWidgets('tab switch triggers fade animation', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Animated',
+          tabTransitionDuration: const Duration(milliseconds: 200),
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      final fadeFinder = find.descendant(
+        of: find.byType(MainAreaTemplate),
+        matching: find.byType(FadeTransition),
+      );
+
+      // Tap Tab B
+      await tester.tap(find.text('Tab B'));
+      await tester.pump(); // one frame after setState
+
+      // Mid-animation: opacity should be < 1.0
+      final animating = tester.widget<FadeTransition>(fadeFinder);
+      expect(animating.opacity.value, lessThan(1.0));
+
+      // Complete animation
+      await tester.pumpAndSettle();
+
+      final settled = tester.widget<FadeTransition>(fadeFinder);
+      expect(settled.opacity.value, 1.0);
+    });
+
     testWidgets('renders without description or icon', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
