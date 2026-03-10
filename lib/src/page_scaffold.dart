@@ -1,5 +1,30 @@
 import 'package:flutter/material.dart';
 
+/// Inherited widget that exposes [MainAreaTemplate] configuration to descendants.
+///
+/// Used by [MainAreaSection] to automatically adjust its appearance
+/// based on whether the parent template has card mode enabled.
+class PageScaffoldScope extends InheritedWidget {
+  /// Whether the parent [MainAreaTemplate] wraps content in a card container.
+  final bool showCard;
+
+  const PageScaffoldScope({
+    super.key,
+    required this.showCard,
+    required super.child,
+  });
+
+  /// Returns the nearest [PageScaffoldScope] ancestor, or null.
+  static PageScaffoldScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<PageScaffoldScope>();
+  }
+
+  @override
+  bool updateShouldNotify(PageScaffoldScope oldWidget) {
+    return showCard != oldWidget.showCard;
+  }
+}
+
 /// Data class representing a single tab in a [MainAreaTemplate].
 class PageTab {
   /// The tab label displayed in the tab bar.
@@ -91,6 +116,11 @@ class MainAreaTemplate extends StatefulWidget {
   /// Set to a duration (e.g. `Duration(milliseconds: 200)`) to enable a fade-in transition.
   final Duration? tabTransitionDuration;
 
+  /// Whether to wrap content in a card container with rounded corners and shadow.
+  /// Defaults to true. Set to false for dashboard-style layouts where content
+  /// cards should float directly on the page background.
+  final bool showCard;
+
   const MainAreaTemplate({
     super.key,
     required this.title,
@@ -108,6 +138,7 @@ class MainAreaTemplate extends StatefulWidget {
     this.maintainState = true,
     this.tabBarBuilder,
     this.tabTransitionDuration,
+    this.showCard = true,
   }) : assert(
          tabs != null || child != null,
          'Either tabs or child must be provided',
@@ -198,11 +229,13 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
 
     final showTabBarInCard = widget.tabs != null && widget.showTabs;
 
-    return Material(
-      color: theme.scaffoldBackgroundColor,
-      child: Padding(
-        padding: widget.outerPadding ?? const EdgeInsets.all(24),
-        child: Column(
+    return PageScaffoldScope(
+      showCard: widget.showCard,
+      child: Material(
+        color: theme.scaffoldBackgroundColor,
+        child: Padding(
+          padding: widget.outerPadding ?? const EdgeInsets.all(24),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.showTitle)
@@ -214,20 +247,28 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
               ),
             if (widget.showTitle) const SizedBox(height: 16),
             Expanded(
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
                 decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  color: widget.showCard
+                      ? colorScheme.surface
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(
+                      widget.showCard ? 12 : 0),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.06),
+                      color: widget.showCard
+                          ? colorScheme.shadow.withValues(alpha: 0.06)
+                          : Colors.transparent,
                       offset: const Offset(0, 2),
-                      blurRadius: 12,
+                      blurRadius: widget.showCard ? 12 : 0,
                       spreadRadius: 0,
                     ),
                   ],
                 ),
-                clipBehavior: Clip.antiAlias,
+                clipBehavior:
+                    widget.showCard ? Clip.antiAlias : Clip.none,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -245,8 +286,8 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                             ),
                     Expanded(
                       child: Padding(
-                        padding:
-                            widget.cardPadding ?? const EdgeInsets.all(20),
+                        padding: widget.cardPadding ??
+                            const EdgeInsets.all(20),
                         child: contentChild,
                       ),
                     ),
@@ -256,6 +297,7 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -341,6 +341,35 @@ void main() {
       expect(find.text('content B'), findsOneWidget);
     });
 
+    testWidgets('showCard false removes card styling', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Dashboard',
+          showCard: false,
+          child: const Text('dashboard content'),
+        ),
+      ));
+
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(find.text('dashboard content'), findsOneWidget);
+
+      // The AnimatedContainer should have transparent background and no visible shadow
+      final animatedContainers = tester.widgetList<AnimatedContainer>(
+        find.descendant(
+          of: find.byType(MainAreaTemplate),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final hasVisibleCard = animatedContainers.any((c) {
+        final decoration = c.decoration;
+        if (decoration is BoxDecoration) {
+          return decoration.color != Colors.transparent;
+        }
+        return false;
+      });
+      expect(hasVisibleCard, isFalse);
+    });
+
     testWidgets('renders without description or icon', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(

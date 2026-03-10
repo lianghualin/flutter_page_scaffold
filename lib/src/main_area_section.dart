@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_page_scaffold/flutter_page_scaffold.dart';
 
 /// A grouped content section with an optional accent-bar section header.
 ///
@@ -34,11 +35,25 @@ class MainAreaSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final scope = PageScaffoldScope.maybeOf(context);
+    final isCardless = scope != null && !scope.showCard;
 
-    final section = Container(
+    final section = AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: isCardless ? colorScheme.surface : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: isCardless
+                ? colorScheme.shadow.withValues(alpha: 0.06)
+                : Colors.transparent,
+            offset: const Offset(0, 2),
+            blurRadius: isCardless ? 8 : 0,
+            spreadRadius: 0,
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(

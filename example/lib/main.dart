@@ -100,6 +100,7 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
   bool _showTabs = true;
   bool _maintainState = true;
   bool _animate = false;
+  bool _showCard = true;
 
   ThemeData get _themeData {
     switch (_currentTheme) {
@@ -132,6 +133,8 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
               onMaintainStateChanged: (v) => setState(() => _maintainState = v),
               animate: _animate,
               onAnimateChanged: (v) => setState(() => _animate = v),
+              showCard: _showCard,
+              onShowCardChanged: (v) => setState(() => _showCard = v),
             ),
             Expanded(
               child: MainAreaTemplate(
@@ -141,6 +144,7 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
                 showTitle: _showTitle,
                 showTabs: _showTabs,
                 maintainState: _maintainState,
+                showCard: _showCard,
                 tabTransitionDuration: _animate
                     ? const Duration(milliseconds: 200)
                     : null,
@@ -185,6 +189,8 @@ class _ControlBar extends StatelessWidget {
   final ValueChanged<bool> onMaintainStateChanged;
   final bool animate;
   final ValueChanged<bool> onAnimateChanged;
+  final bool showCard;
+  final ValueChanged<bool> onShowCardChanged;
 
   const _ControlBar({
     required this.currentTheme,
@@ -197,6 +203,8 @@ class _ControlBar extends StatelessWidget {
     required this.onMaintainStateChanged,
     required this.animate,
     required this.onAnimateChanged,
+    required this.showCard,
+    required this.onShowCardChanged,
   });
 
   static const _themes = [
@@ -259,6 +267,12 @@ class _ControlBar extends StatelessWidget {
             label: 'Animate',
             value: animate,
             onChanged: onAnimateChanged,
+          ),
+          const SizedBox(width: 8),
+          _ToggleChip(
+            label: 'Card',
+            value: showCard,
+            onChanged: onShowCardChanged,
           ),
 
           const Spacer(),

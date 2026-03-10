@@ -8,6 +8,8 @@ A reusable Flutter widget package for consistent, theme-aware main content area 
 
 - **MainAreaTemplate** -- Page-level wrapper with large title, description, icon, and action buttons
 - **MainAreaSection** -- Grouped content card with accent-bar section headers
+- **Tabbed navigation** -- Built-in tab bar with customizable transition animations
+- **Card-free mode** -- `showCard: false` for dashboard-style floating layouts
 - **Fully theme-aware** -- All colors derived from `Theme.of(context)`, works with any `ThemeData`
 - **Zero dependencies** -- Only requires Flutter SDK
 
@@ -17,7 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_page_scaffold: ^0.1.0
+  flutter_page_scaffold: ^0.2.3
 ```
 
 Then run:
@@ -61,29 +63,6 @@ MainAreaTemplate(
 )
 ```
 
-### Settings page layout
-
-```dart
-MainAreaTemplate(
-  title: 'Log Settings',
-  description: 'Configure log storage and retention policies.',
-  icon: Icons.settings_outlined,
-  child: Column(
-    children: [
-      MainAreaSection(
-        label: 'STORAGE LIMITS',
-        child: MyFormFields(),
-      ),
-      const SizedBox(height: 16),
-      MainAreaSection(
-        label: 'STATUS',
-        child: MyStatusWidget(),
-      ),
-    ],
-  ),
-)
-```
-
 ### Tabbed page layout
 
 ```dart
@@ -107,6 +86,61 @@ MainAreaTemplate(
 )
 ```
 
+### Tab animation and state control
+
+```dart
+MainAreaTemplate(
+  title: 'Manager',
+  maintainState: false,                              // dispose unselected tabs
+  tabTransitionDuration: const Duration(milliseconds: 200), // fade animation
+  tabs: [
+    PageTab(label: 'Tab A', child: ContentA()),
+    PageTab(label: 'Tab B', child: ContentB()),
+  ],
+)
+```
+
+### Custom tab bar
+
+```dart
+MainAreaTemplate(
+  title: 'Custom',
+  tabs: [
+    PageTab(label: 'One', child: ContentOne()),
+    PageTab(label: 'Two', child: ContentTwo()),
+  ],
+  tabBarBuilder: (tabs, selectedIndex, onTabSelected) {
+    return Row(
+      children: [
+        for (int i = 0; i < tabs.length; i++)
+          TextButton(
+            onPressed: () => onTabSelected(i),
+            child: Text(tabs[i].label),
+          ),
+      ],
+    );
+  },
+)
+```
+
+### Dashboard layout (no card)
+
+```dart
+MainAreaTemplate(
+  title: 'Dashboard',
+  icon: Icons.home_rounded,
+  showCard: false,    // content floats directly on page background
+  child: Column(
+    children: [
+      Expanded(child: Row(children: [Card(...), Card(...), Card(...)])),
+      Expanded(child: Row(children: [Card(...), Card(...)])),
+    ],
+  ),
+)
+```
+
+When `showCard` is `false`, `MainAreaSection` widgets automatically switch from grey to white backgrounds with individual shadows via `PageScaffoldScope`.
+
 ### Tabs without title (compact mode)
 
 ```dart
@@ -124,39 +158,52 @@ MainAreaTemplate(
 
 ### MainAreaTemplate
 
-| Property | Type | Required | Description |
+| Property | Type | Default | Description |
 |---|---|---|---|
-| `title` | `String` | Yes | Large bold page title |
-| `description` | `String?` | No | Subtle muted subtitle below the title |
-| `icon` | `IconData?` | No | Icon displayed before the title in a tinted container |
-| `actions` | `List<Widget>?` | No | Action buttons displayed to the right of the title |
-| `child` | `Widget?` | No* | Main content, typically a Column of `MainAreaSection` widgets |
-| `outerPadding` | `EdgeInsetsGeometry?` | No | Padding around the template (default: 24) |
-| `cardPadding` | `EdgeInsetsGeometry?` | No | Padding inside the content card (default: 20) |
-| `tabs` | `List<PageTab>?` | No | Tab definitions for multi-page navigation. When null, uses `child` |
-| `showTitle` | `bool` | No | Show/hide the title row (default: true) |
-| `showTabs` | `bool` | No | Show/hide the tab bar (default: true, only when `tabs` is provided) |
-| `initialTabIndex` | `int` | No | Starting tab index (default: 0) |
-| `onTabChanged` | `ValueChanged<int>?` | No | Callback when selected tab changes |
-
-\* Required when `tabs` is null.
+| `title` | `String` | *required* | Large bold page title |
+| `description` | `String?` | `null` | Subtle muted subtitle below the title |
+| `icon` | `IconData?` | `null` | Icon displayed before the title in a tinted container |
+| `actions` | `List<Widget>?` | `null` | Action buttons displayed to the right of the title |
+| `child` | `Widget?` | `null` | Main content (required when `tabs` is null) |
+| `outerPadding` | `EdgeInsetsGeometry?` | `EdgeInsets.all(24)` | Padding around the template |
+| `cardPadding` | `EdgeInsetsGeometry?` | `EdgeInsets.all(20)` | Padding inside the content card |
+| `tabs` | `List<PageTab>?` | `null` | Tab definitions for multi-page navigation |
+| `showTitle` | `bool` | `true` | Show/hide the title row |
+| `showTabs` | `bool` | `true` | Show/hide the tab bar (only when `tabs` is provided) |
+| `showCard` | `bool` | `true` | Wrap content in a card container with rounded corners and shadow |
+| `initialTabIndex` | `int` | `0` | Starting tab index |
+| `onTabChanged` | `ValueChanged<int>?` | `null` | Callback when selected tab changes |
+| `maintainState` | `bool` | `true` | Keep all tab children mounted via `IndexedStack` |
+| `tabTransitionDuration` | `Duration?` | `null` | Fade animation duration when switching tabs |
+| `tabBarBuilder` | `TabBarBuilder?` | `null` | Custom tab bar widget builder |
 
 ### PageTab
 
-| Property | Type | Required | Description |
+| Property | Type | Default | Description |
 |---|---|---|---|
-| `label` | `String` | Yes | Tab label displayed in the tab bar |
-| `icon` | `IconData?` | No | Icon displayed before the label |
-| `child` | `Widget` | Yes | Content widget shown when this tab is selected |
+| `label` | `String` | *required* | Tab label displayed in the tab bar |
+| `icon` | `IconData?` | `null` | Icon displayed before the label |
+| `child` | `Widget` | *required* | Content widget shown when this tab is selected |
 
 ### MainAreaSection
 
-| Property | Type | Required | Description |
+| Property | Type | Default | Description |
 |---|---|---|---|
-| `label` | `String?` | No | Uppercase section header with accent bar. Hidden if null |
-| `child` | `Widget` | Yes | Section content |
-| `padding` | `EdgeInsetsGeometry?` | No | Padding around content (default: 16) |
-| `expanded` | `bool` | No | If true, fills remaining space in a Column (default: false) |
+| `label` | `String?` | `null` | Uppercase section header with accent bar |
+| `child` | `Widget` | *required* | Section content |
+| `padding` | `EdgeInsetsGeometry?` | `EdgeInsets.all(16)` | Padding around content |
+| `expanded` | `bool` | `false` | If true, fills remaining space in a Column |
+
+### PageScaffoldScope
+
+An `InheritedWidget` provided by `MainAreaTemplate` that exposes configuration to descendant widgets. `MainAreaSection` reads this automatically to adjust its appearance when `showCard` changes.
+
+```dart
+final scope = PageScaffoldScope.maybeOf(context);
+if (scope != null && !scope.showCard) {
+  // card-free mode — sections use surface color with shadow
+}
+```
 
 ## Theme Integration
 
@@ -166,7 +213,7 @@ All colors are pulled from `Theme.of(context).colorScheme`:
 |---|---|
 | Page background | `scaffoldBackgroundColor` |
 | Content card | `surface` |
-| Section background | `surfaceContainerHighest` |
+| Section background | `surfaceContainerHighest` (or `surface` when `showCard: false`) |
 | Accent bar | `primary` |
 | Title text | `onSurface` |
 | Description text | `onSurfaceVariant` |
@@ -184,7 +231,7 @@ cd example
 flutter run -d chrome
 ```
 
-The playground demonstrates three page layouts (table, settings, dashboard) with a theme switcher to preview light, dark, and sunshine themes.
+The playground demonstrates three page layouts (table, settings, dashboard) with toggles for title, tabs, keep-alive, animation, card mode, and a theme switcher for light, dark, and sunshine themes.
 
 ## License
 

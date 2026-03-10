@@ -1,3 +1,9 @@
+## 0.2.3
+
+- Feat: Add `showCard` parameter — set to `false` to disable the card container for dashboard-style layouts
+- Feat: Add `PageScaffoldScope` InheritedWidget — `MainAreaSection` automatically switches to white background with shadow when card is disabled
+- Feat: Animated transitions when toggling `showCard` on both `MainAreaTemplate` and `MainAreaSection` (300ms ease-in-out)
+
 ## 0.2.2
 
 - Feat: Add `maintainState` parameter — set to `false` to dispose unselected tabs instead of keeping all alive via `IndexedStack`
