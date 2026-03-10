@@ -14,6 +14,16 @@ class PageTab {
   const PageTab({required this.label, this.icon, required this.child});
 }
 
+/// Signature for a function that builds a custom tab bar widget.
+///
+/// Receives the list of [tabs], the current [selectedIndex], and an
+/// [onTabSelected] callback to invoke when a tab is tapped.
+typedef TabBarBuilder = Widget Function(
+  List<PageTab> tabs,
+  int selectedIndex,
+  ValueChanged<int> onTabSelected,
+);
+
 /// A page-level template for the main content area.
 ///
 /// Provides:
@@ -71,6 +81,11 @@ class MainAreaTemplate extends StatefulWidget {
   /// When false, only the selected tab's child is mounted.
   final bool maintainState;
 
+  /// Optional builder for a custom tab bar widget.
+  /// When provided, replaces the default underline tab bar.
+  /// When null (default), uses the built-in tab bar.
+  final TabBarBuilder? tabBarBuilder;
+
   /// Duration of the fade animation when switching tabs.
   /// When null (default), tab switches are instant with no animation.
   /// Set to a duration (e.g. `Duration(milliseconds: 200)`) to enable a fade-in transition.
@@ -91,6 +106,7 @@ class MainAreaTemplate extends StatefulWidget {
     this.initialTabIndex = 0,
     this.onTabChanged,
     this.maintainState = true,
+    this.tabBarBuilder,
     this.tabTransitionDuration,
   }) : assert(
          tabs != null || child != null,
@@ -216,11 +232,17 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (showTabBarInCard)
-                      _PageTabBar(
-                        tabs: widget.tabs!,
-                        selectedIndex: _selectedIndex,
-                        onTabSelected: _onTabSelected,
-                      ),
+                      widget.tabBarBuilder != null
+                          ? widget.tabBarBuilder!(
+                              widget.tabs!,
+                              _selectedIndex,
+                              _onTabSelected,
+                            )
+                          : _PageTabBar(
+                              tabs: widget.tabs!,
+                              selectedIndex: _selectedIndex,
+                              onTabSelected: _onTabSelected,
+                            ),
                     Expanded(
                       child: Padding(
                         padding:

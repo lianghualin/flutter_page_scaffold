@@ -276,6 +276,71 @@ void main() {
       expect(settled.opacity.value, 1.0);
     });
 
+    testWidgets('tabBarBuilder replaces default tab bar', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Custom Tabs',
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+          tabBarBuilder: (tabs, selectedIndex, onTabSelected) {
+            return Container(
+              key: const Key('custom-tab-bar'),
+              child: Row(
+                children: [
+                  for (int i = 0; i < tabs.length; i++)
+                    TextButton(
+                      onPressed: () => onTabSelected(i),
+                      child: Text('CUSTOM-${tabs[i].label}'),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ));
+
+      // Custom tab bar renders
+      expect(find.byKey(const Key('custom-tab-bar')), findsOneWidget);
+      expect(find.text('CUSTOM-Tab A'), findsOneWidget);
+      expect(find.text('CUSTOM-Tab B'), findsOneWidget);
+
+      // Default tab labels should NOT be present (replaced by custom)
+      expect(find.text('Tab A'), findsNothing);
+      expect(find.text('Tab B'), findsNothing);
+    });
+
+    testWidgets('tabBarBuilder onTabSelected switches tabs', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Custom Tabs',
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+          tabBarBuilder: (tabs, selectedIndex, onTabSelected) {
+            return Row(
+              children: [
+                for (int i = 0; i < tabs.length; i++)
+                  GestureDetector(
+                    onTap: () => onTabSelected(i),
+                    child: Text('custom-${tabs[i].label}'),
+                  ),
+              ],
+            );
+          },
+        ),
+      ));
+
+      expect(find.text('content A'), findsOneWidget);
+
+      await tester.tap(find.text('custom-Tab B'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('content B'), findsOneWidget);
+    });
+
     testWidgets('renders without description or icon', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
