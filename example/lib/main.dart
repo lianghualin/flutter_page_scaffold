@@ -148,6 +148,13 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
                 tabTransitionDuration: _animate
                     ? const Duration(milliseconds: 200)
                     : null,
+                actions: [
+                  FilledButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add Device'),
+                  ),
+                ],
                 tabs: const [
                   PageTab(
                     label: 'Devices',

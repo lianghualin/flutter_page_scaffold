@@ -9,7 +9,7 @@ void main() {
     );
   }
 
-  group('MainAreaTemplate', () {
+  group('MainAreaTemplate — no-tabs mode', () {
     testWidgets('renders title and description', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
@@ -50,19 +50,6 @@ void main() {
       expect(find.text('Save'), findsOneWidget);
     });
 
-    testWidgets('existing behavior unchanged when tabs is null', (tester) async {
-      await tester.pumpWidget(wrapWithMaterial(
-        MainAreaTemplate(
-          title: 'No Tabs',
-          showTitle: true,
-          child: const Text('single page'),
-        ),
-      ));
-
-      expect(find.text('No Tabs'), findsOneWidget);
-      expect(find.text('single page'), findsOneWidget);
-    });
-
     testWidgets('hides title when showTitle is false', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
@@ -76,7 +63,49 @@ void main() {
       expect(find.text('body'), findsOneWidget);
     });
 
-    testWidgets('renders tabs when provided', (tester) async {
+    testWidgets('renders without description or icon', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Minimal',
+          child: const Text('body'),
+        ),
+      ));
+
+      expect(find.text('Minimal'), findsOneWidget);
+      expect(find.text('body'), findsOneWidget);
+    });
+
+    testWidgets('showCard false removes card styling', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Dashboard',
+          showCard: false,
+          child: const Text('dashboard content'),
+        ),
+      ));
+
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(find.text('dashboard content'), findsOneWidget);
+
+      final animatedContainers = tester.widgetList<AnimatedContainer>(
+        find.descendant(
+          of: find.byType(MainAreaTemplate),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final hasVisibleCard = animatedContainers.any((c) {
+        final decoration = c.decoration;
+        if (decoration is BoxDecoration) {
+          return decoration.color != Colors.transparent;
+        }
+        return false;
+      });
+      expect(hasVisibleCard, isFalse);
+    });
+  });
+
+  group('MainAreaTemplate — unified bar (tabs mode)', () {
+    testWidgets('renders tabs as pill-style chips', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
           title: 'Tabbed',
@@ -90,6 +119,36 @@ void main() {
       expect(find.text('Devices'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('devices content'), findsOneWidget);
+    });
+
+    testWidgets('description shown as tooltip, not visible text', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Tabbed',
+          description: 'A tooltip description',
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+          ],
+        ),
+      ));
+
+      // Description should be in a Tooltip, not visible as plain text
+      expect(find.byType(Tooltip), findsOneWidget);
+      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      expect(tooltip.message, 'A tooltip description');
+    });
+
+    testWidgets('no tooltip icon when description is null', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'No Desc',
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+          ],
+        ),
+      ));
+
+      expect(find.byType(Tooltip), findsNothing);
     });
 
     testWidgets('switches tab content on tap', (tester) async {
@@ -106,33 +165,13 @@ void main() {
         ),
       ));
 
-      // Tab A is visible initially (IndexedStack shows both but only first is "visible")
       expect(find.text('content A'), findsOneWidget);
 
-      // Tap Tab B
       await tester.tap(find.text('Tab B'));
       await tester.pumpAndSettle();
 
       expect(changedIndex, 1);
       expect(find.text('content B'), findsOneWidget);
-    });
-
-    testWidgets('hides tab bar when showTabs is false', (tester) async {
-      await tester.pumpWidget(wrapWithMaterial(
-        MainAreaTemplate(
-          title: 'Hidden Tabs',
-          showTabs: false,
-          tabs: const [
-            PageTab(label: 'Tab A', child: Text('content A')),
-            PageTab(label: 'Tab B', child: Text('content B')),
-          ],
-        ),
-      ));
-
-      expect(find.text('Tab A'), findsNothing);
-      expect(find.text('Tab B'), findsNothing);
-      // Content still renders (first tab)
-      expect(find.text('content A'), findsOneWidget);
     });
 
     testWidgets('respects initialTabIndex', (tester) async {
@@ -147,11 +186,100 @@ void main() {
         ),
       ));
 
-      // Both exist in IndexedStack, but index 1 is shown
-      // Verify Tab B's text is present
       expect(find.text('content B'), findsOneWidget);
     });
 
+    testWidgets('renders tab icons inside pills', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'With Icons',
+          tabs: const [
+            PageTab(label: 'Devices', icon: Icons.router, child: Text('content')),
+          ],
+        ),
+      ));
+
+      expect(find.byIcon(Icons.router), findsOneWidget);
+    });
+  });
+
+  group('MainAreaTemplate — visibility matrix', () {
+    testWidgets('showTitle=true showTabs=true shows full bar', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Full Bar',
+          description: 'desc',
+          showTitle: true,
+          showTabs: true,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Full Bar'), findsOneWidget);
+      expect(find.text('Tab A'), findsOneWidget);
+      expect(find.byType(Tooltip), findsOneWidget);
+    });
+
+    testWidgets('showTitle=true showTabs=false hides tabs keeps title', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Title Only',
+          showTitle: true,
+          showTabs: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Title Only'), findsOneWidget);
+      expect(find.text('Tab A'), findsNothing);
+      expect(find.text('Tab B'), findsNothing);
+      // Content still renders (first tab)
+      expect(find.text('content A'), findsOneWidget);
+    });
+
+    testWidgets('showTitle=false showTabs=true hides title keeps tabs', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Hidden Title',
+          showTitle: false,
+          showTabs: true,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Hidden Title'), findsNothing);
+      expect(find.text('Tab A'), findsOneWidget);
+      expect(find.text('Tab B'), findsOneWidget);
+    });
+
+    testWidgets('showTitle=false showTabs=false hides entire bar', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Hidden',
+          showTitle: false,
+          showTabs: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Hidden'), findsNothing);
+      expect(find.text('Tab A'), findsNothing);
+      // Content still renders
+      expect(find.text('content A'), findsOneWidget);
+    });
+  });
+
+  group('MainAreaTemplate — maintainState', () {
     testWidgets('maintainState true keeps all tabs mounted', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
@@ -164,7 +292,6 @@ void main() {
         ),
       ));
 
-      // IndexedStack keeps both children in the tree (offstage but mounted)
       expect(find.text('content A', skipOffstage: false), findsOneWidget);
       expect(find.text('content B', skipOffstage: false), findsOneWidget);
     });
@@ -181,7 +308,6 @@ void main() {
         ),
       ));
 
-      // Only selected tab's content is in the tree
       expect(find.text('content A'), findsOneWidget);
       expect(find.text('content B'), findsNothing);
     });
@@ -204,7 +330,9 @@ void main() {
       expect(find.text('content A'), findsNothing);
       expect(find.text('content B'), findsOneWidget);
     });
+  });
 
+  group('MainAreaTemplate — animation', () {
     testWidgets('no FadeTransition when tabTransitionDuration is null', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
@@ -261,71 +389,71 @@ void main() {
         matching: find.byType(FadeTransition),
       );
 
-      // Tap Tab B
       await tester.tap(find.text('Tab B'));
-      await tester.pump(); // one frame after setState
+      await tester.pump();
 
-      // Mid-animation: opacity should be < 1.0
       final animating = tester.widget<FadeTransition>(fadeFinder);
       expect(animating.opacity.value, lessThan(1.0));
 
-      // Complete animation
       await tester.pumpAndSettle();
 
       final settled = tester.widget<FadeTransition>(fadeFinder);
       expect(settled.opacity.value, 1.0);
     });
+  });
 
-    testWidgets('tabBarBuilder replaces default tab bar', (tester) async {
+  group('MainAreaTemplate — tabBarBuilder', () {
+    testWidgets('tabBarBuilder replaces default pill tabs', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
-          title: 'Custom Tabs',
+          title: 'Test',
           tabs: const [
-            PageTab(label: 'Tab A', child: Text('content A')),
-            PageTab(label: 'Tab B', child: Text('content B')),
+            PageTab(label: 'A', child: Text('content A')),
+            PageTab(label: 'B', child: Text('content B')),
           ],
           tabBarBuilder: (tabs, selectedIndex, onTabSelected) {
-            return Container(
+            return Row(
               key: const Key('custom-tab-bar'),
-              child: Row(
-                children: [
-                  for (int i = 0; i < tabs.length; i++)
-                    TextButton(
-                      onPressed: () => onTabSelected(i),
-                      child: Text('CUSTOM-${tabs[i].label}'),
-                    ),
-                ],
-              ),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < tabs.length; i++)
+                  GestureDetector(
+                    onTap: () => onTabSelected(i),
+                    child: Text('C${tabs[i].label}'),
+                  ),
+              ],
             );
           },
         ),
       ));
 
-      // Custom tab bar renders
       expect(find.byKey(const Key('custom-tab-bar')), findsOneWidget);
-      expect(find.text('CUSTOM-Tab A'), findsOneWidget);
-      expect(find.text('CUSTOM-Tab B'), findsOneWidget);
-
-      // Default tab labels should NOT be present (replaced by custom)
-      expect(find.text('Tab A'), findsNothing);
-      expect(find.text('Tab B'), findsNothing);
+      expect(find.text('CA'), findsOneWidget);
+      expect(find.text('CB'), findsOneWidget);
+      // Default pill labels should NOT be present
+      expect(find.text('A'), findsNothing);
+      expect(find.text('B'), findsNothing);
     });
 
     testWidgets('tabBarBuilder onTabSelected switches tabs', (tester) async {
       await tester.pumpWidget(wrapWithMaterial(
         MainAreaTemplate(
-          title: 'Custom Tabs',
+          title: 'Test',
           tabs: const [
-            PageTab(label: 'Tab A', child: Text('content A')),
-            PageTab(label: 'Tab B', child: Text('content B')),
+            PageTab(label: 'A', child: Text('content A')),
+            PageTab(label: 'B', child: Text('content B')),
           ],
           tabBarBuilder: (tabs, selectedIndex, onTabSelected) {
             return Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 for (int i = 0; i < tabs.length; i++)
                   GestureDetector(
                     onTap: () => onTabSelected(i),
-                    child: Text('custom-${tabs[i].label}'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text('t${tabs[i].label}'),
+                    ),
                   ),
               ],
             );
@@ -335,51 +463,10 @@ void main() {
 
       expect(find.text('content A'), findsOneWidget);
 
-      await tester.tap(find.text('custom-Tab B'));
+      await tester.tap(find.text('tB'));
       await tester.pumpAndSettle();
 
       expect(find.text('content B'), findsOneWidget);
-    });
-
-    testWidgets('showCard false removes card styling', (tester) async {
-      await tester.pumpWidget(wrapWithMaterial(
-        MainAreaTemplate(
-          title: 'Dashboard',
-          showCard: false,
-          child: const Text('dashboard content'),
-        ),
-      ));
-
-      expect(find.text('Dashboard'), findsOneWidget);
-      expect(find.text('dashboard content'), findsOneWidget);
-
-      // The AnimatedContainer should have transparent background and no visible shadow
-      final animatedContainers = tester.widgetList<AnimatedContainer>(
-        find.descendant(
-          of: find.byType(MainAreaTemplate),
-          matching: find.byType(AnimatedContainer),
-        ),
-      );
-      final hasVisibleCard = animatedContainers.any((c) {
-        final decoration = c.decoration;
-        if (decoration is BoxDecoration) {
-          return decoration.color != Colors.transparent;
-        }
-        return false;
-      });
-      expect(hasVisibleCard, isFalse);
-    });
-
-    testWidgets('renders without description or icon', (tester) async {
-      await tester.pumpWidget(wrapWithMaterial(
-        MainAreaTemplate(
-          title: 'Minimal',
-          child: const Text('body'),
-        ),
-      ));
-
-      expect(find.text('Minimal'), findsOneWidget);
-      expect(find.text('body'), findsOneWidget);
     });
   });
 

@@ -1,3 +1,10 @@
+## 0.3.0
+
+- **BREAKING**: Unified title-tab bar — tabs now render as pill-style chips in the title row instead of an underline tab bar inside the card
+- **BREAKING**: Description text shown as tooltip (hover `?` icon) when tabs are present; visible text when no tabs
+- No public API parameters removed — existing code compiles without changes, but visual output differs
+- Title font reduced to 19px in tabbed mode (24px preserved in no-tabs mode)
+
 ## 0.2.3
 
 - Feat: Add `showCard` parameter — set to `false` to disable the card container for dashboard-style layouts

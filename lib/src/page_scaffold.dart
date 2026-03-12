@@ -58,13 +58,18 @@ typedef TabBarBuilder = Widget Function(
 /// - A content card with rounded corners and shadow
 /// - Optional tabbed navigation via [tabs] parameter
 ///
-/// The [child] is placed inside a themed card container.
-/// Use [MainAreaSection] widgets inside the child for grouped content.
+/// When [tabs] is provided, the title and tabs merge into a unified bar
+/// with pill-style tab indicators. The [description] is shown as a tooltip.
+///
+/// When [tabs] is null, the title area renders in classic mode with
+/// visible description text below the title.
 class MainAreaTemplate extends StatefulWidget {
   /// Page title, displayed large and bold.
   final String title;
 
-  /// Optional subtitle/description, displayed smaller and muted below title.
+  /// Optional subtitle/description.
+  /// When [tabs] is provided, shown as tooltip on hover.
+  /// When [tabs] is null, shown as visible text below the title.
   final String? description;
 
   /// Optional icon displayed before the title.
@@ -84,7 +89,7 @@ class MainAreaTemplate extends StatefulWidget {
   final EdgeInsetsGeometry? cardPadding;
 
   /// Optional list of tabs for multi-page navigation.
-  /// When provided, renders a tab bar and uses [IndexedStack] to swap content.
+  /// When provided, renders a unified title+tab bar with pill-style tabs.
   /// When null, falls back to single-page mode using [child].
   final List<PageTab>? tabs;
 
@@ -107,8 +112,8 @@ class MainAreaTemplate extends StatefulWidget {
   final bool maintainState;
 
   /// Optional builder for a custom tab bar widget.
-  /// When provided, replaces the default underline tab bar.
-  /// When null (default), uses the built-in tab bar.
+  /// When provided, replaces the default pill tab bar.
+  /// When null (default), uses the built-in pill tabs.
   final TabBarBuilder? tabBarBuilder;
 
   /// Duration of the fade animation when switching tabs.
@@ -227,7 +232,10 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
       );
     }
 
-    final showTabBarInCard = widget.tabs != null && widget.showTabs;
+    final hasTabs = widget.tabs != null;
+    final showBar = hasTabs
+        ? (widget.showTitle || widget.showTabs)
+        : widget.showTitle;
 
     return PageScaffoldScope(
       showCard: widget.showCard,
@@ -236,82 +244,90 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
         child: Padding(
           padding: widget.outerPadding ?? const EdgeInsets.all(24),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.showTitle)
-              _TitleArea(
-                title: widget.title,
-                description: widget.description,
-                icon: widget.icon,
-                actions: widget.actions,
-              ),
-            if (widget.showTitle) const SizedBox(height: 16),
-            Expanded(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  color: widget.showCard
-                      ? colorScheme.surface
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(
-                      widget.showCard ? 12 : 0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.showCard
-                          ? colorScheme.shadow.withValues(alpha: 0.06)
-                          : Colors.transparent,
-                      offset: const Offset(0, 2),
-                      blurRadius: widget.showCard ? 12 : 0,
-                      spreadRadius: 0,
-                    ),
-                  ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (showBar && hasTabs)
+                _UnifiedBar(
+                  title: widget.title,
+                  description: widget.description,
+                  icon: widget.icon,
+                  actions: widget.actions,
+                  tabs: widget.tabs!,
+                  selectedIndex: _selectedIndex,
+                  onTabSelected: _onTabSelected,
+                  showTitle: widget.showTitle,
+                  showTabs: widget.showTabs,
+                  tabBarBuilder: widget.tabBarBuilder,
                 ),
-                clipBehavior:
-                    widget.showCard ? Clip.antiAlias : Clip.none,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (showTabBarInCard)
-                      widget.tabBarBuilder != null
-                          ? widget.tabBarBuilder!(
-                              widget.tabs!,
-                              _selectedIndex,
-                              _onTabSelected,
-                            )
-                          : _PageTabBar(
-                              tabs: widget.tabs!,
-                              selectedIndex: _selectedIndex,
-                              onTabSelected: _onTabSelected,
-                            ),
-                    Expanded(
-                      child: Padding(
-                        padding: widget.cardPadding ??
-                            const EdgeInsets.all(20),
-                        child: contentChild,
+              if (showBar && !hasTabs)
+                _TitleArea(
+                  title: widget.title,
+                  description: widget.description,
+                  icon: widget.icon,
+                  actions: widget.actions,
+                ),
+              if (showBar) const SizedBox(height: 16),
+              Expanded(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  decoration: BoxDecoration(
+                    color: widget.showCard
+                        ? colorScheme.surface
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(
+                        widget.showCard ? 12 : 0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.showCard
+                            ? colorScheme.shadow.withValues(alpha: 0.06)
+                            : Colors.transparent,
+                        offset: const Offset(0, 2),
+                        blurRadius: widget.showCard ? 12 : 0,
+                        spreadRadius: 0,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  clipBehavior:
+                      widget.showCard ? Clip.antiAlias : Clip.none,
+                  child: Padding(
+                    padding: widget.cardPadding ??
+                        const EdgeInsets.all(20),
+                    child: contentChild,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 }
 
-class _PageTabBar extends StatelessWidget {
+class _UnifiedBar extends StatelessWidget {
+  final String title;
+  final String? description;
+  final IconData? icon;
+  final List<Widget>? actions;
   final List<PageTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
+  final bool showTitle;
+  final bool showTabs;
+  final TabBarBuilder? tabBarBuilder;
 
-  const _PageTabBar({
+  const _UnifiedBar({
+    required this.title,
+    this.description,
+    this.icon,
+    this.actions,
     required this.tabs,
     required this.selectedIndex,
     required this.onTabSelected,
+    required this.showTitle,
+    required this.showTabs,
+    this.tabBarBuilder,
   });
 
   @override
@@ -327,15 +343,81 @@ class _PageTabBar extends StatelessWidget {
           ),
         ),
       ),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         children: [
-          for (int i = 0; i < tabs.length; i++)
-            _PageTabChip(
-              label: tabs[i].label,
-              icon: tabs[i].icon,
-              selected: selectedIndex == i,
-              onTap: () => onTabSelected(i),
-              isFirst: i == 0,
+          if (showTitle) ...[
+            if (icon != null) ...[
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(
+                  icon,
+                  color: colorScheme.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+            ],
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+                letterSpacing: -0.3,
+              ),
+            ),
+            if (description != null) ...[
+              const SizedBox(width: 8),
+              _TooltipIcon(description: description!),
+            ],
+          ],
+          if (showTitle && showTabs) ...[
+            Container(
+              width: 1,
+              height: 22,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              color: colorScheme.outlineVariant,
+            ),
+          ],
+          if (showTabs)
+            tabBarBuilder != null
+                ? Flexible(
+                    child: tabBarBuilder!(
+                      tabs,
+                      selectedIndex,
+                      onTabSelected,
+                    ),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (int i = 0; i < tabs.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 4),
+                        _PillTab(
+                          label: tabs[i].label,
+                          icon: tabs[i].icon,
+                          selected: selectedIndex == i,
+                          onTap: () => onTabSelected(i),
+                        ),
+                      ],
+                    ],
+                  ),
+          const Spacer(),
+          if (actions != null && actions!.isNotEmpty)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < actions!.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  actions![i],
+                ],
+              ],
             ),
         ],
       ),
@@ -343,39 +425,33 @@ class _PageTabBar extends StatelessWidget {
   }
 }
 
-class _PageTabChip extends StatelessWidget {
+class _PillTab extends StatelessWidget {
   final String label;
   final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
-  final bool isFirst;
 
-  const _PageTabChip({
+  const _PillTab({
     required this.label,
     this.icon,
     required this.selected,
     required this.onTap,
-    this.isFirst = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final cornerRadius =
-        isFirst ? const BorderRadius.only(topLeft: Radius.circular(12)) : null;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: cornerRadius,
+      borderRadius: BorderRadius.circular(18),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: selected ? colorScheme.primary : Colors.transparent,
-              width: 2,
-            ),
-          ),
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -383,17 +459,17 @@ class _PageTabChip extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: 18,
+                size: 14,
                 color: selected
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
             ],
             Text(
               label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected
                     ? colorScheme.primary
@@ -401,6 +477,43 @@ class _PageTabChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TooltipIcon extends StatelessWidget {
+  final String description;
+
+  const _TooltipIcon({required this.description});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Tooltip(
+      message: description,
+      child: Container(
+        width: 14,
+        height: 14,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            '?',
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
+              height: 1,
+            ),
+          ),
         ),
       ),
     );
