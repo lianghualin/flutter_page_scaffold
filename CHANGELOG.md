@@ -1,3 +1,8 @@
+## 0.4.1
+
+- Fix: Normalize title font size to 20px in both tabbed and non-tabbed modes (was 24px without tabs, 19px with tabs)
+- Fix: Remove inconsistent letter spacing in unified bar title
+
 ## 0.4.0
 
 - **BREAKING**: Unified title-tab bar — tabs now render as pill-style chips in the title row instead of an underline tab bar inside the card
