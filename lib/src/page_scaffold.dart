@@ -366,10 +366,9 @@ class _UnifiedBar extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontSize: 19,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: colorScheme.onSurface,
-                letterSpacing: -0.3,
               ),
             ),
             if (description != null) ...[
@@ -566,7 +565,7 @@ class _TitleArea extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: colorScheme.onSurface,
                       height: 1.2,
