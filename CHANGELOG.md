@@ -1,9 +1,13 @@
-## 0.3.0
+## 0.4.0
 
 - **BREAKING**: Unified title-tab bar — tabs now render as pill-style chips in the title row instead of an underline tab bar inside the card
-- **BREAKING**: Description text shown as tooltip (hover `?` icon) when tabs are present; visible text when no tabs
-- No public API parameters removed — existing code compiles without changes, but visual output differs
-- Title font reduced to 19px in tabbed mode (24px preserved in no-tabs mode)
+- **BREAKING**: Description text shown as tooltip (hover `?` icon) when tabs are present; visible text retained in no-tabs mode
+- Pill-style tab indicator with rounded chips and subtle primary background tint
+- Vertical separator between title and tabs for clean visual grouping
+- Title font compacted to 19px in tabbed mode (24px preserved in no-tabs mode)
+- Visibility matrix: `showTitle` and `showTabs` now independently control unified bar sections
+- No public API parameters removed — existing code compiles without changes, visual output differs
+- Added actions button to example playground
 
 ## 0.2.3
 

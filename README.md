@@ -8,7 +8,7 @@ A reusable Flutter widget package for consistent, theme-aware main content area 
 
 - **MainAreaTemplate** -- Page-level wrapper with large title, description, icon, and action buttons
 - **MainAreaSection** -- Grouped content card with accent-bar section headers
-- **Tabbed navigation** -- Built-in tab bar with customizable transition animations
+- **Unified title-tab bar** -- Pill-style tabs merged into the title row for compact navigation
 - **Card-free mode** -- `showCard: false` for dashboard-style floating layouts
 - **Fully theme-aware** -- All colors derived from `Theme.of(context)`, works with any `ThemeData`
 - **Zero dependencies** -- Only requires Flutter SDK
@@ -19,7 +19,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_page_scaffold: ^0.2.3
+  flutter_page_scaffold: ^0.4.0
 ```
 
 Then run:
@@ -63,13 +63,22 @@ MainAreaTemplate(
 )
 ```
 
-### Tabbed page layout
+### Tabbed page layout (unified bar)
+
+When `tabs` is provided, the title and tabs merge into a single unified bar with pill-style tab chips. The description text becomes a tooltip (hover the `?` icon).
 
 ```dart
 MainAreaTemplate(
   title: 'Network Manager',
-  description: 'Manage network infrastructure.',
+  description: 'Manage network infrastructure.',  // shown as tooltip
   icon: Icons.router,
+  actions: [
+    FilledButton.icon(
+      onPressed: () {},
+      icon: const Icon(Icons.add),
+      label: const Text('Add Device'),
+    ),
+  ],
   tabs: [
     PageTab(
       label: 'Devices',
@@ -111,6 +120,7 @@ MainAreaTemplate(
   ],
   tabBarBuilder: (tabs, selectedIndex, onTabSelected) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         for (int i = 0; i < tabs.length; i++)
           TextButton(
@@ -141,9 +151,12 @@ MainAreaTemplate(
 
 When `showCard` is `false`, `MainAreaSection` widgets automatically switch from grey to white backgrounds with individual shadows via `PageScaffoldScope`.
 
-### Tabs without title (compact mode)
+### Visibility control
+
+The unified bar responds to `showTitle` and `showTabs` independently:
 
 ```dart
+// Tabs only (no title/icon)
 MainAreaTemplate(
   title: 'Manager',        // still required but hidden
   showTitle: false,
@@ -151,6 +164,21 @@ MainAreaTemplate(
     PageTab(label: 'Tab A', child: ContentA()),
     PageTab(label: 'Tab B', child: ContentB()),
   ],
+)
+
+// Title only (tabs hidden, content still switches via initialTabIndex)
+MainAreaTemplate(
+  title: 'Manager',
+  showTabs: false,
+  tabs: [...],
+)
+
+// Both hidden (just the card content)
+MainAreaTemplate(
+  title: 'Manager',
+  showTitle: false,
+  showTabs: false,
+  tabs: [...],
 )
 ```
 
@@ -161,28 +189,28 @@ MainAreaTemplate(
 | Property | Type | Default | Description |
 |---|---|---|---|
 | `title` | `String` | *required* | Large bold page title |
-| `description` | `String?` | `null` | Subtle muted subtitle below the title |
+| `description` | `String?` | `null` | Tooltip in tabbed mode; visible subtitle in no-tabs mode |
 | `icon` | `IconData?` | `null` | Icon displayed before the title in a tinted container |
-| `actions` | `List<Widget>?` | `null` | Action buttons displayed to the right of the title |
+| `actions` | `List<Widget>?` | `null` | Action buttons at the trailing edge of the title bar |
 | `child` | `Widget?` | `null` | Main content (required when `tabs` is null) |
 | `outerPadding` | `EdgeInsetsGeometry?` | `EdgeInsets.all(24)` | Padding around the template |
 | `cardPadding` | `EdgeInsetsGeometry?` | `EdgeInsets.all(20)` | Padding inside the content card |
-| `tabs` | `List<PageTab>?` | `null` | Tab definitions for multi-page navigation |
-| `showTitle` | `bool` | `true` | Show/hide the title row |
-| `showTabs` | `bool` | `true` | Show/hide the tab bar (only when `tabs` is provided) |
+| `tabs` | `List<PageTab>?` | `null` | Tab definitions; enables unified title-tab bar |
+| `showTitle` | `bool` | `true` | Show/hide title, icon, and description in the bar |
+| `showTabs` | `bool` | `true` | Show/hide tab pills (only when `tabs` is provided) |
 | `showCard` | `bool` | `true` | Wrap content in a card container with rounded corners and shadow |
 | `initialTabIndex` | `int` | `0` | Starting tab index |
 | `onTabChanged` | `ValueChanged<int>?` | `null` | Callback when selected tab changes |
 | `maintainState` | `bool` | `true` | Keep all tab children mounted via `IndexedStack` |
 | `tabTransitionDuration` | `Duration?` | `null` | Fade animation duration when switching tabs |
-| `tabBarBuilder` | `TabBarBuilder?` | `null` | Custom tab bar widget builder |
+| `tabBarBuilder` | `TabBarBuilder?` | `null` | Custom tab bar widget builder (replaces pill tabs) |
 
 ### PageTab
 
 | Property | Type | Default | Description |
 |---|---|---|---|
-| `label` | `String` | *required* | Tab label displayed in the tab bar |
-| `icon` | `IconData?` | `null` | Icon displayed before the label |
+| `label` | `String` | *required* | Tab label displayed in the pill chip |
+| `icon` | `IconData?` | `null` | Icon displayed before the label inside the pill |
 | `child` | `Widget` | *required* | Content widget shown when this tab is selected |
 
 ### MainAreaSection
@@ -219,6 +247,9 @@ All colors are pulled from `Theme.of(context).colorScheme`:
 | Description text | `onSurfaceVariant` |
 | Section header text | `onSurfaceVariant` |
 | Card shadow | `shadow` (6% opacity) |
+| Selected tab pill | `primary` (8% alpha bg, solid text) |
+| Unselected tab text | `onSurfaceVariant` |
+| Bar separator | `outlineVariant` |
 
 Works out of the box with light, dark, or any custom `ThemeData`.
 
