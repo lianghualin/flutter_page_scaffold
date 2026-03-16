@@ -639,5 +639,121 @@ void main() {
 
       expect(find.text('root content'), findsOneWidget);
     });
+
+    testWidgets('tab switch pops navigation stack to root', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Tab Pop',
+          contentNavigator: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Text('detail A'),
+                    ),
+                  ),
+                  child: const Text('Go A'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Go A'));
+      await tester.pumpAndSettle();
+      expect(find.text('detail A'), findsOneWidget);
+
+      await tester.tap(find.text('Tab B'));
+      await tester.pumpAndSettle();
+      expect(find.text('content B'), findsOneWidget);
+      expect(find.text('detail A'), findsNothing);
+    });
+
+    testWidgets('tapping current tab resets navigation stack', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Same Tab Reset',
+          contentNavigator: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Text('detail A'),
+                    ),
+                  ),
+                  child: const Text('Go A'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Go A'));
+      await tester.pumpAndSettle();
+      expect(find.text('detail A'), findsOneWidget);
+
+      await tester.tap(find.text('Tab A'));
+      await tester.pumpAndSettle();
+      expect(find.text('Go A'), findsOneWidget);
+      expect(find.text('detail A'), findsNothing);
+    });
+
+    testWidgets('deep push chain pops all on tab switch', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Deep Pop',
+          contentNavigator: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (ctx) => ElevatedButton(
+                        onPressed: () => Navigator.push(
+                          ctx,
+                          MaterialPageRoute(
+                            builder: (_) => const Text('level 3'),
+                          ),
+                        ),
+                        child: const Text('level 2'),
+                      ),
+                    ),
+                  ),
+                  child: const Text('level 1'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('level 1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('level 2'));
+      await tester.pumpAndSettle();
+      expect(find.text('level 3'), findsOneWidget);
+
+      await tester.tap(find.text('Tab B'));
+      await tester.pumpAndSettle();
+      expect(find.text('content B'), findsOneWidget);
+      expect(find.text('level 3'), findsNothing);
+      expect(find.text('level 2'), findsNothing);
+    });
   });
 }

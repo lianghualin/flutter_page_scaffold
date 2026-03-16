@@ -223,6 +223,9 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
   }
 
   void _onTabSelected(int index) {
+    if (widget.contentNavigator && _stackDepth > 0) {
+      _navigatorKey.currentState!.popUntil((route) => route.isFirst);
+    }
     if (index != _selectedIndex) {
       setState(() => _selectedIndex = index);
       _animationController?.forward(from: 0.0);
