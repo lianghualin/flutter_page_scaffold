@@ -1105,5 +1105,39 @@ void main() {
       expect(find.byIcon(Icons.router), findsNothing);
       expect(find.byIcon(Icons.arrow_back), findsOneWidget);
     });
+
+    testWidgets('maintainState true keeps all tabs mounted with contentNavigator', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'MaintainState',
+          contentNavigator: true,
+          maintainState: true,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      expect(find.text('content A', skipOffstage: false), findsOneWidget);
+      expect(find.text('content B', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('maintainState false only mounts selected tab with contentNavigator', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Lazy Nav',
+          contentNavigator: true,
+          maintainState: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+            PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      expect(find.text('content A'), findsOneWidget);
+      expect(find.text('content B'), findsNothing);
+    });
   });
 }
