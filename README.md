@@ -9,6 +9,7 @@ A reusable Flutter widget package for consistent, theme-aware main content area 
 - **MainAreaTemplate** -- Page-level wrapper with large title, description, icon, and action buttons
 - **MainAreaSection** -- Grouped content card with accent-bar section headers
 - **Unified title-tab bar** -- Pill-style tabs merged into the title row for compact navigation
+- **Nested navigation** -- `contentNavigator: true` keeps pushed pages inside the card with breadcrumb navigation
 - **Card-free mode** -- `showCard: false` for dashboard-style floating layouts
 - **Fully theme-aware** -- All colors derived from `Theme.of(context)`, works with any `ThemeData`
 - **Zero dependencies** -- Only requires Flutter SDK
@@ -19,7 +20,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_page_scaffold: ^0.4.0
+  flutter_page_scaffold: ^0.6.0
 ```
 
 Then run:
@@ -151,6 +152,58 @@ MainAreaTemplate(
 
 When `showCard` is `false`, `MainAreaSection` widgets automatically switch from grey to white backgrounds with individual shadows via `PageScaffoldScope`.
 
+### Nested navigation (contentNavigator)
+
+When `contentNavigator` is enabled, `Navigator.push` calls from within tab content render sub-pages **inside the card area** instead of going full-screen. A breadcrumb pill appears on the title bar's divider line showing the navigation path.
+
+```dart
+MainAreaTemplate(
+  title: 'Network Manager',
+  icon: Icons.router,
+  contentNavigator: true,  // enable nested navigation
+  tabs: [
+    PageTab(
+      label: 'Devices',
+      icon: Icons.table_chart_outlined,
+      child: Builder(
+        builder: (context) => Column(
+          children: [
+            MainAreaSection(
+              label: 'TOOLBAR',
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  // Push a sub-page — renders inside the card,
+                  // not full-screen. Breadcrumb shows automatically.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Device Detail'),
+                      builder: (_) => const DeviceDetailPage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('View Detail'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+    PageTab(label: 'Settings', child: SettingsPage()),
+  ],
+)
+```
+
+**How it works:**
+
+- Sub-pages pushed via `Navigator.push` stay inside the content card
+- A breadcrumb pill (`← Devices / Device Detail / ...`) floats on the title bar divider line
+- Each breadcrumb segment is clickable to pop directly to that level
+- Tapping any tab (including the current one) pops the entire navigation stack back to root
+- Set `RouteSettings(name: 'Page Title')` on your routes to label breadcrumb segments
+- Works in both tabbed and non-tabbed modes (root label shows tab name or "Home")
+
 ### Visibility control
 
 The unified bar responds to `showTitle` and `showTabs` independently:
@@ -204,6 +257,7 @@ MainAreaTemplate(
 | `maintainState` | `bool` | `true` | Keep all tab children mounted via `IndexedStack` |
 | `tabTransitionDuration` | `Duration?` | `null` | Fade animation duration when switching tabs |
 | `tabBarBuilder` | `TabBarBuilder?` | `null` | Custom tab bar widget builder (replaces pill tabs) |
+| `contentNavigator` | `bool` | `false` | Wrap content in a nested Navigator for in-card sub-page navigation with breadcrumb |
 
 ### PageTab
 
@@ -250,6 +304,10 @@ All colors are pulled from `Theme.of(context).colorScheme`:
 | Selected tab pill | `primary` (8% alpha bg, solid text) |
 | Unselected tab text | `onSurfaceVariant` |
 | Bar separator | `outlineVariant` |
+| Breadcrumb pill background | `scaffoldBackgroundColor` |
+| Breadcrumb pill border | `outline` |
+| Breadcrumb clickable text | `primary` |
+| Breadcrumb current page | `onSurface` (bold) |
 
 Works out of the box with light, dark, or any custom `ThemeData`.
 
@@ -262,7 +320,7 @@ cd example
 flutter run -d chrome
 ```
 
-The playground demonstrates three page layouts (table, settings, dashboard) with toggles for title, tabs, keep-alive, animation, card mode, and a theme switcher for light, dark, and sunshine themes.
+The playground demonstrates three page layouts (table, settings, dashboard) with toggles for title, tabs, keep-alive, animation, card mode, nested navigator, and a theme switcher for light, dark, and sunshine themes. Enable the Navigator toggle and click "Detail Demo" to explore multi-level nested navigation with breadcrumb.
 
 ## License
 

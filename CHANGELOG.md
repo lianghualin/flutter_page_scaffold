@@ -1,3 +1,14 @@
+## 0.6.1
+
+### Improved
+- Breadcrumb pill badge floats on the title bar divider line instead of taking up vertical space
+- Card content area no longer shrinks when breadcrumb appears
+- Smaller, more refined breadcrumb styling (12px font, rounded pill with border)
+- Breadcrumb background matches `scaffoldBackgroundColor` for a clean "cut-through" effect on the divider
+
+### Added
+- Multi-level nested navigation pages in example playground (Device Detail, Port Config, Traffic Monitor, Port Detail)
+
 ## 0.6.0
 
 ### Breaking
