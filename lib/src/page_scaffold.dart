@@ -294,7 +294,20 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   icon: widget.icon,
                   actions: widget.actions,
                 ),
-              if (showBar) const SizedBox(height: 16),
+              if (showBar || (widget.contentNavigator && _stackDepth > 0))
+                const SizedBox(height: 16),
+              if (widget.contentNavigator && _stackDepth > 0)
+                _BreadcrumbBar(
+                  rootLabel: widget.tabs != null
+                      ? widget.tabs![_selectedIndex].label
+                      : 'Home',
+                  routeStack: _navigatorObserver.routeStack,
+                  onPopToRoot: () => _navigatorKey.currentState!
+                      .popUntil((route) => route.isFirst),
+                  onPopToDepth: _popToDepth,
+                ),
+              if (widget.contentNavigator && _stackDepth > 0)
+                const SizedBox(height: 12),
               Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -318,67 +331,47 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   ),
                   clipBehavior:
                       widget.showCard ? Clip.antiAlias : Clip.none,
-                  child: widget.contentNavigator
-                      ? Column(
-                          children: [
-                            if (_stackDepth > 0)
-                              _BreadcrumbBar(
-                                rootLabel: widget.tabs != null
-                                    ? widget.tabs![_selectedIndex].label
-                                    : 'Home',
-                                routeStack: _navigatorObserver.routeStack,
-                                onPopToRoot: () => _navigatorKey.currentState!
-                                    .popUntil((route) => route.isFirst),
-                                onPopToDepth: _popToDepth,
-                              ),
-                            Expanded(
-                              child: Padding(
-                                padding: widget.cardPadding ??
-                                    const EdgeInsets.all(20),
-                                child: Navigator(
-                                  key: _navigatorKey,
-                                  observers: [_navigatorObserver],
-                                  onGenerateRoute: (_) => PageRouteBuilder(
-                                    pageBuilder: (context, _, __) {
-                                      Widget child;
-                                      if (widget.tabs != null) {
-                                        if (widget.maintainState) {
-                                          child = IndexedStack(
-                                            index: _selectedIndex,
-                                            children: widget.tabs!
-                                                .map((t) => t.child)
-                                                .toList(),
-                                          );
-                                        } else {
-                                          child = widget
-                                              .tabs![_selectedIndex].child;
-                                        }
-                                      } else {
-                                        child = widget.child!;
-                                      }
-                                      if (_fadeAnimation != null &&
-                                          widget.tabs != null) {
-                                        child = FadeTransition(
-                                          opacity: _fadeAnimation!,
-                                          child: child,
-                                        );
-                                      }
-                                      return child;
-                                    },
-                                    transitionDuration: Duration.zero,
-                                    reverseTransitionDuration: Duration.zero,
-                                  ),
-                                  onDidRemovePage: (page) {},
-                                ),
-                              ),
+                  child: Padding(
+                    padding: widget.cardPadding ??
+                        const EdgeInsets.all(20),
+                    child: widget.contentNavigator
+                        ? Navigator(
+                            key: _navigatorKey,
+                            observers: [_navigatorObserver],
+                            onGenerateRoute: (_) => PageRouteBuilder(
+                              pageBuilder: (context, _, __) {
+                                Widget child;
+                                if (widget.tabs != null) {
+                                  if (widget.maintainState) {
+                                    child = IndexedStack(
+                                      index: _selectedIndex,
+                                      children: widget.tabs!
+                                          .map((t) => t.child)
+                                          .toList(),
+                                    );
+                                  } else {
+                                    child = widget
+                                        .tabs![_selectedIndex].child;
+                                  }
+                                } else {
+                                  child = widget.child!;
+                                }
+                                if (_fadeAnimation != null &&
+                                    widget.tabs != null) {
+                                  child = FadeTransition(
+                                    opacity: _fadeAnimation!,
+                                    child: child,
+                                  );
+                                }
+                                return child;
+                              },
+                              transitionDuration: Duration.zero,
+                              reverseTransitionDuration: Duration.zero,
                             ),
-                          ],
-                        )
-                      : Padding(
-                          padding: widget.cardPadding ??
-                              const EdgeInsets.all(20),
-                          child: contentChild,
-                        ),
+                            onDidRemovePage: (page) {},
+                          )
+                        : contentChild,
+                  ),
                 ),
               ),
             ],
