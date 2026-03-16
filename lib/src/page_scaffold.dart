@@ -224,6 +224,16 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
     }
   }
 
+  void _popToDepth(int targetDepth) {
+    final popCount = _stackDepth - targetDepth;
+    var count = 0;
+    _navigatorKey.currentState!.popUntil((route) {
+      if (count >= popCount) return true;
+      count++;
+      return false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -308,50 +318,67 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   ),
                   clipBehavior:
                       widget.showCard ? Clip.antiAlias : Clip.none,
-                  child: Padding(
-                    padding: widget.cardPadding ??
-                        const EdgeInsets.all(20),
-                    child: widget.contentNavigator
-                        ? Navigator(
-                            key: _navigatorKey,
-                            observers: [_navigatorObserver],
-                            onGenerateRoute: (_) => PageRouteBuilder(
-                              pageBuilder: (context, _, __) {
-                                Widget child;
-                                if (widget.tabs != null) {
-                                  if (widget.maintainState) {
-                                    child = IndexedStack(
-                                      index: _selectedIndex,
-                                      children: widget.tabs!
-                                          .map((t) => t.child)
-                                          .toList(),
-                                    );
-                                  } else {
-                                    child =
-                                        widget.tabs![_selectedIndex].child;
-                                  }
-                                } else {
-                                  child = widget.child!;
-                                }
-                                if (_fadeAnimation != null &&
-                                    widget.tabs != null) {
-                                  child = FadeTransition(
-                                    opacity: _fadeAnimation!,
-                                    child: child,
-                                  );
-                                }
-                                return child;
-                              },
-                              transitionDuration: Duration.zero,
-                              reverseTransitionDuration: Duration.zero,
+                  child: widget.contentNavigator
+                      ? Column(
+                          children: [
+                            if (_stackDepth > 0)
+                              _BreadcrumbBar(
+                                rootLabel: widget.tabs != null
+                                    ? widget.tabs![_selectedIndex].label
+                                    : 'Home',
+                                routeStack: _navigatorObserver.routeStack,
+                                onPopToRoot: () => _navigatorKey.currentState!
+                                    .popUntil((route) => route.isFirst),
+                                onPopToDepth: _popToDepth,
+                              ),
+                            Expanded(
+                              child: Padding(
+                                padding: widget.cardPadding ??
+                                    const EdgeInsets.all(20),
+                                child: Navigator(
+                                  key: _navigatorKey,
+                                  observers: [_navigatorObserver],
+                                  onGenerateRoute: (_) => PageRouteBuilder(
+                                    pageBuilder: (context, _, __) {
+                                      Widget child;
+                                      if (widget.tabs != null) {
+                                        if (widget.maintainState) {
+                                          child = IndexedStack(
+                                            index: _selectedIndex,
+                                            children: widget.tabs!
+                                                .map((t) => t.child)
+                                                .toList(),
+                                          );
+                                        } else {
+                                          child = widget
+                                              .tabs![_selectedIndex].child;
+                                        }
+                                      } else {
+                                        child = widget.child!;
+                                      }
+                                      if (_fadeAnimation != null &&
+                                          widget.tabs != null) {
+                                        child = FadeTransition(
+                                          opacity: _fadeAnimation!,
+                                          child: child,
+                                        );
+                                      }
+                                      return child;
+                                    },
+                                    transitionDuration: Duration.zero,
+                                    reverseTransitionDuration: Duration.zero,
+                                  ),
+                                  onDidRemovePage: (page) {},
+                                ),
+                              ),
                             ),
-                            onDidRemovePage: (page) {
-                              // Root page removal is prevented by the
-                              // observer — no action needed here.
-                            },
-                          )
-                        : contentChild,
-                  ),
+                          ],
+                        )
+                      : Padding(
+                          padding: widget.cardPadding ??
+                              const EdgeInsets.all(20),
+                          child: contentChild,
+                        ),
                 ),
               ),
             ],
@@ -658,6 +685,108 @@ class _TitleArea extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+class _BreadcrumbBar extends StatelessWidget {
+  final String rootLabel;
+  final List<String?> routeStack;
+  final VoidCallback onPopToRoot;
+  final void Function(int depth) onPopToDepth;
+
+  const _BreadcrumbBar({
+    required this.rootLabel,
+    required this.routeStack,
+    required this.onPopToRoot,
+    required this.onPopToDepth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        border: Border(
+          bottom: BorderSide(color: colorScheme.outline, width: 1),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: onPopToRoot,
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back,
+                        size: 16, color: colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      rootLabel,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            for (int i = 0; i < routeStack.length; i++) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  '/',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.outlineVariant,
+                  ),
+                ),
+              ),
+              if (i < routeStack.length - 1)
+                InkWell(
+                  onTap: () => onPopToDepth(i + 1),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 2),
+                    child: Text(
+                      routeStack[i] ?? '...',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 2),
+                  child: Text(
+                    routeStack[i] ?? '...',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
