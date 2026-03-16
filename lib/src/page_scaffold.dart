@@ -294,9 +294,8 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   icon: widget.icon,
                   actions: widget.actions,
                 ),
-              if (showBar || (widget.contentNavigator && _stackDepth > 0))
-                const SizedBox(height: 16),
-              if (widget.contentNavigator && _stackDepth > 0)
+              if (widget.contentNavigator && _stackDepth > 0) ...[
+                if (showBar) const SizedBox(height: 8),
                 _BreadcrumbBar(
                   rootLabel: widget.tabs != null
                       ? widget.tabs![_selectedIndex].label
@@ -306,8 +305,9 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                       .popUntil((route) => route.isFirst),
                   onPopToDepth: _popToDepth,
                 ),
-              if (widget.contentNavigator && _stackDepth > 0)
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+              ] else if (showBar)
+                const SizedBox(height: 16),
               Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -699,86 +699,76 @@ class _BreadcrumbBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        border: Border(
-          bottom: BorderSide(color: colorScheme.outline, width: 1),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkWell(
-              onTap: onPopToRoot,
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.arrow_back,
-                        size: 16, color: colorScheme.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      rootLabel,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.primary,
-                      ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: onPopToRoot,
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.arrow_back,
+                      size: 16, color: colorScheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    rootLabel,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.primary,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          for (int i = 0; i < routeStack.length; i++) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                '/',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colorScheme.outlineVariant,
                 ),
               ),
             ),
-            for (int i = 0; i < routeStack.length; i++) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '/',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colorScheme.outlineVariant,
-                  ),
-                ),
-              ),
-              if (i < routeStack.length - 1)
-                InkWell(
-                  onTap: () => onPopToDepth(i + 1),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4, vertical: 2),
-                    child: Text(
-                      routeStack[i] ?? '...',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Padding(
+            if (i < routeStack.length - 1)
+              InkWell(
+                onTap: () => onPopToDepth(i + 1),
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 4, vertical: 2),
                   child: Text(
                     routeStack[i] ?? '...',
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
+                      color: colorScheme.primary,
                     ),
                   ),
                 ),
-            ],
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 4, vertical: 2),
+                child: Text(
+                  routeStack[i] ?? '...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
           ],
-        ),
+        ],
       ),
     );
   }
