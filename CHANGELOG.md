@@ -1,3 +1,17 @@
+## 0.6.0
+
+### Breaking
+- **REMOVED** `contentNavigatorShowTabs` parameter — the breadcrumb strip now provides navigation unconditionally when `contentNavigator` is true. Remove this parameter from call sites.
+
+### Added
+- Breadcrumb navigation strip inside the content card — appears when sub-pages are pushed via `contentNavigator`
+- Each breadcrumb segment is clickable to pop directly to that navigation level
+- Root segment shows tab label (tabbed mode) or "Home" (non-tabbed mode)
+- Horizontal scroll for long breadcrumb trails
+
+### Removed
+- `_BackButtonBar` widget (replaced by breadcrumb strip)
+
 ## 0.5.0
 
 ### Added
