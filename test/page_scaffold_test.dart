@@ -493,4 +493,66 @@ void main() {
       expect(tab.icon, isNull);
     });
   });
+
+  group('MainAreaTemplate — contentNavigator', () {
+    testWidgets('contentNavigator false does not insert Navigator', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'No Nav',
+          contentNavigator: false,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+          ],
+        ),
+      ));
+
+      final navigators = tester.widgetList<Navigator>(
+        find.descendant(
+          of: find.byType(MainAreaTemplate),
+          matching: find.byType(Navigator),
+        ),
+      );
+      expect(navigators.length, 0);
+    });
+
+    testWidgets('contentNavigator true inserts Navigator in widget tree', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'With Nav',
+          contentNavigator: true,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('content A')),
+          ],
+        ),
+      ));
+
+      final navigators = tester.widgetList<Navigator>(
+        find.descendant(
+          of: find.byType(MainAreaTemplate),
+          matching: find.byType(Navigator),
+        ),
+      );
+      expect(navigators.length, 1);
+      expect(find.text('content A'), findsOneWidget);
+    });
+
+    testWidgets('contentNavigator true works in non-tabbed mode', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Non-tabbed Nav',
+          contentNavigator: true,
+          child: const Text('child content'),
+        ),
+      ));
+
+      final navigators = tester.widgetList<Navigator>(
+        find.descendant(
+          of: find.byType(MainAreaTemplate),
+          matching: find.byType(Navigator),
+        ),
+      );
+      expect(navigators.length, 1);
+      expect(find.text('child content'), findsOneWidget);
+    });
+  });
 }

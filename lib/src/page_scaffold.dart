@@ -126,6 +126,19 @@ class MainAreaTemplate extends StatefulWidget {
   /// cards should float directly on the page background.
   final bool showCard;
 
+  /// Whether to wrap the content area in a nested [Navigator].
+  /// When true, [Navigator.push] calls from within tab/child content
+  /// render sub-pages inside the card area instead of going full-screen.
+  /// Defaults to false.
+  final bool contentNavigator;
+
+  /// Whether to keep tabs visible when a sub-page is pushed.
+  /// Only effective when [contentNavigator] is true.
+  /// When true (default), tabs remain visible and tapping any tab pops the
+  /// navigation stack to root. When false, tabs are hidden when a sub-page
+  /// is pushed and a back button with the route title is shown instead.
+  final bool contentNavigatorShowTabs;
+
   const MainAreaTemplate({
     super.key,
     required this.title,
@@ -144,6 +157,8 @@ class MainAreaTemplate extends StatefulWidget {
     this.tabBarBuilder,
     this.tabTransitionDuration,
     this.showCard = true,
+    this.contentNavigator = false,
+    this.contentNavigatorShowTabs = true,
   }) : assert(
          tabs != null || child != null,
          'Either tabs or child must be provided',
@@ -158,12 +173,21 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
   late int _selectedIndex;
   AnimationController? _animationController;
   Animation<double>? _fadeAnimation;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late final _ContentNavigatorObserver _navigatorObserver;
+  int get _stackDepth => _navigatorObserver.depth;
+  String? get _currentRouteTitle => _navigatorObserver.currentTitle;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialTabIndex;
     _initAnimation();
+    _navigatorObserver = _ContentNavigatorObserver(
+      onStackChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   void _initAnimation() {
@@ -293,7 +317,46 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   child: Padding(
                     padding: widget.cardPadding ??
                         const EdgeInsets.all(20),
-                    child: contentChild,
+                    child: widget.contentNavigator
+                        ? Navigator(
+                            key: _navigatorKey,
+                            observers: [_navigatorObserver],
+                            onGenerateRoute: (_) => PageRouteBuilder(
+                              pageBuilder: (context, _, __) {
+                                Widget child;
+                                if (widget.tabs != null) {
+                                  if (widget.maintainState) {
+                                    child = IndexedStack(
+                                      index: _selectedIndex,
+                                      children: widget.tabs!
+                                          .map((t) => t.child)
+                                          .toList(),
+                                    );
+                                  } else {
+                                    child =
+                                        widget.tabs![_selectedIndex].child;
+                                  }
+                                } else {
+                                  child = widget.child!;
+                                }
+                                if (_fadeAnimation != null &&
+                                    widget.tabs != null) {
+                                  child = FadeTransition(
+                                    opacity: _fadeAnimation!,
+                                    child: child,
+                                  );
+                                }
+                                return child;
+                              },
+                              transitionDuration: Duration.zero,
+                              reverseTransitionDuration: Duration.zero,
+                            ),
+                            onPopPage: (route, result) {
+                              if (route.isFirst) return false;
+                              return route.didPop(result);
+                            },
+                          )
+                        : contentChild,
                   ),
                 ),
               ),
@@ -602,5 +665,40 @@ class _TitleArea extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+class _ContentNavigatorObserver extends NavigatorObserver {
+  final VoidCallback onStackChanged;
+  int _depth = 0;
+  String? _currentTitle;
+
+  _ContentNavigatorObserver({required this.onStackChanged});
+
+  int get depth => _depth;
+  String? get currentTitle => _currentTitle;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute != null) {
+      _depth++;
+      _currentTitle = route.settings.name;
+      onStackChanged();
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _depth--;
+    if (_depth < 0) _depth = 0;
+    _currentTitle = _depth > 0 ? previousRoute?.settings.name : null;
+    onStackChanged();
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _depth--;
+    if (_depth < 0) _depth = 0;
+    onStackChanged();
   }
 }
