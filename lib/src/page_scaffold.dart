@@ -274,31 +274,42 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (showBar && hasTabs)
-                _UnifiedBar(
-                  title: widget.title,
-                  description: widget.description,
-                  icon: widget.icon,
-                  actions: widget.actions,
-                  tabs: widget.tabs!,
-                  selectedIndex: _selectedIndex,
-                  onTabSelected: _onTabSelected,
-                  showTitle: widget.showTitle,
-                  showTabs: widget.showTabs,
-                  tabBarBuilder: widget.tabBarBuilder,
-                )
-              else if (showBar && !hasTabs)
-                _TitleArea(
-                  title: widget.title,
-                  description: widget.description,
-                  icon: widget.icon,
-                  actions: widget.actions,
-                ),
               if (showBar)
-                SizedBox(
-                  height: 16,
-                  child: widget.contentNavigator && _stackDepth > 0
-                      ? _BreadcrumbBar(
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (hasTabs)
+                          _UnifiedBar(
+                            title: widget.title,
+                            description: widget.description,
+                            icon: widget.icon,
+                            actions: widget.actions,
+                            tabs: widget.tabs!,
+                            selectedIndex: _selectedIndex,
+                            onTabSelected: _onTabSelected,
+                            showTitle: widget.showTitle,
+                            showTabs: widget.showTabs,
+                            tabBarBuilder: widget.tabBarBuilder,
+                          )
+                        else
+                          _TitleArea(
+                            title: widget.title,
+                            description: widget.description,
+                            icon: widget.icon,
+                            actions: widget.actions,
+                          ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                    if (widget.contentNavigator && _stackDepth > 0)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _BreadcrumbBar(
                           rootLabel: widget.tabs != null
                               ? widget.tabs![_selectedIndex].label
                               : 'Home',
@@ -306,8 +317,9 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                           onPopToRoot: () => _navigatorKey.currentState!
                               .popUntil((route) => route.isFirst),
                           onPopToDepth: _popToDepth,
-                        )
-                      : null,
+                        ),
+                      ),
+                  ],
                 ),
               Expanded(
                 child: AnimatedContainer(
@@ -700,64 +712,79 @@ class _BreadcrumbBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: onPopToRoot,
-            borderRadius: BorderRadius.circular(4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.arrow_back,
-                    size: 14, color: colorScheme.primary),
-                const SizedBox(width: 4),
-                Text(
-                  rootLabel,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          for (int i = 0; i < routeStack.length; i++) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                '/',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.outlineVariant,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: onPopToRoot,
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back,
+                        size: 16, color: colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      rootLabel,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            if (i < routeStack.length - 1)
-              InkWell(
-                onTap: () => onPopToDepth(i + 1),
-                borderRadius: BorderRadius.circular(4),
+            for (int i = 0; i < routeStack.length; i++) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
-                  routeStack[i] ?? '...',
+                  '/',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.primary,
+                    fontSize: 14,
+                    color: colorScheme.outlineVariant,
                   ),
                 ),
-              )
-            else
-              Text(
-                routeStack[i] ?? '...',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurface,
-                ),
               ),
+              if (i < routeStack.length - 1)
+                InkWell(
+                  onTap: () => onPopToDepth(i + 1),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 2),
+                    child: Text(
+                      routeStack[i] ?? '...',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 2),
+                  child: Text(
+                    routeStack[i] ?? '...',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
