@@ -364,9 +364,9 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                               transitionDuration: Duration.zero,
                               reverseTransitionDuration: Duration.zero,
                             ),
-                            onPopPage: (route, result) {
-                              if (route.isFirst) return false;
-                              return route.didPop(result);
+                            onDidRemovePage: (page) {
+                              // Root page removal is prevented by the
+                              // observer — no action needed here.
                             },
                           )
                         : contentChild,

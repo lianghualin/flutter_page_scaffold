@@ -101,6 +101,8 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
   bool _maintainState = true;
   bool _animate = false;
   bool _showCard = true;
+  bool _contentNavigator = false;
+  bool _contentNavigatorShowTabs = true;
 
   ThemeData get _themeData {
     switch (_currentTheme) {
@@ -135,6 +137,10 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
               onAnimateChanged: (v) => setState(() => _animate = v),
               showCard: _showCard,
               onShowCardChanged: (v) => setState(() => _showCard = v),
+              contentNavigator: _contentNavigator,
+              onContentNavigatorChanged: (v) => setState(() => _contentNavigator = v),
+              contentNavigatorShowTabs: _contentNavigatorShowTabs,
+              onContentNavigatorShowTabsChanged: (v) => setState(() => _contentNavigatorShowTabs = v),
             ),
             Expanded(
               child: MainAreaTemplate(
@@ -145,6 +151,8 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
                 showTabs: _showTabs,
                 maintainState: _maintainState,
                 showCard: _showCard,
+                contentNavigator: _contentNavigator,
+                contentNavigatorShowTabs: _contentNavigatorShowTabs,
                 tabTransitionDuration: _animate
                     ? const Duration(milliseconds: 200)
                     : null,
@@ -198,6 +206,10 @@ class _ControlBar extends StatelessWidget {
   final ValueChanged<bool> onAnimateChanged;
   final bool showCard;
   final ValueChanged<bool> onShowCardChanged;
+  final bool contentNavigator;
+  final ValueChanged<bool> onContentNavigatorChanged;
+  final bool contentNavigatorShowTabs;
+  final ValueChanged<bool> onContentNavigatorShowTabsChanged;
 
   const _ControlBar({
     required this.currentTheme,
@@ -212,6 +224,10 @@ class _ControlBar extends StatelessWidget {
     required this.onAnimateChanged,
     required this.showCard,
     required this.onShowCardChanged,
+    required this.contentNavigator,
+    required this.onContentNavigatorChanged,
+    required this.contentNavigatorShowTabs,
+    required this.onContentNavigatorShowTabsChanged,
   });
 
   static const _themes = [
@@ -280,6 +296,18 @@ class _ControlBar extends StatelessWidget {
             label: 'Card',
             value: showCard,
             onChanged: onShowCardChanged,
+          ),
+          const SizedBox(width: 8),
+          _ToggleChip(
+            label: 'Navigator',
+            value: contentNavigator,
+            onChanged: onContentNavigatorChanged,
+          ),
+          const SizedBox(width: 8),
+          _ToggleChip(
+            label: 'Nav Tabs',
+            value: contentNavigatorShowTabs,
+            onChanged: onContentNavigatorShowTabsChanged,
           ),
 
           const Spacer(),
@@ -437,6 +465,25 @@ class TableDemoContent extends StatelessWidget {
                 onPressed: () {},
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Add Device'),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Device Detail'),
+                      builder: (_) => const Center(
+                        child: Text(
+                          'Device Detail Page\n(pushed via contentNavigator)',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.open_in_new, size: 16),
+                label: const Text('Detail Demo'),
               ),
               const SizedBox(width: 12),
               SizedBox(
