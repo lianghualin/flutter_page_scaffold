@@ -1,3 +1,11 @@
+## 0.5.0
+
+### Added
+- `contentNavigator` parameter on `MainAreaTemplate` — opt-in nested navigation that keeps pushed pages within the content card area
+- `contentNavigatorShowTabs` parameter — controls whether tabs stay visible (Option A, default) or hide with a back button (Option B) when sub-pages are pushed
+- `_BackButtonBar` widget for Option B title bar mode
+- Example playground toggle for contentNavigator demo
+
 ## 0.4.1
 
 - Fix: Normalize title font size to 20px in both tabbed and non-tabbed modes (was 24px without tabs, 19px with tabs)
