@@ -294,8 +294,7 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   icon: widget.icon,
                   actions: widget.actions,
                 ),
-              if (widget.contentNavigator && _stackDepth > 0) ...[
-                if (showBar) const SizedBox(height: 8),
+              if (widget.contentNavigator && _stackDepth > 0)
                 _BreadcrumbBar(
                   rootLabel: widget.tabs != null
                       ? widget.tabs![_selectedIndex].label
@@ -304,9 +303,8 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   onPopToRoot: () => _navigatorKey.currentState!
                       .popUntil((route) => route.isFirst),
                   onPopToDepth: _popToDepth,
-                ),
-                const SizedBox(height: 8),
-              ] else if (showBar)
+                )
+              else if (showBar)
                 const SizedBox(height: 16),
               Expanded(
                 child: AnimatedContainer(
@@ -699,76 +697,79 @@ class _BreadcrumbBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: onPopToRoot,
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.arrow_back,
-                      size: 16, color: colorScheme.primary),
-                  const SizedBox(width: 4),
-                  Text(
-                    rootLabel,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.primary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: onPopToRoot,
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back,
+                        size: 16, color: colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      rootLabel,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          for (int i = 0; i < routeStack.length; i++) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                '/',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.outlineVariant,
+                  ],
                 ),
               ),
             ),
-            if (i < routeStack.length - 1)
-              InkWell(
-                onTap: () => onPopToDepth(i + 1),
-                borderRadius: BorderRadius.circular(4),
-                child: Padding(
+            for (int i = 0; i < routeStack.length; i++) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  '/',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.outlineVariant,
+                  ),
+                ),
+              ),
+              if (i < routeStack.length - 1)
+                InkWell(
+                  onTap: () => onPopToDepth(i + 1),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 2),
+                    child: Text(
+                      routeStack[i] ?? '...',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 4, vertical: 2),
                   child: Text(
                     routeStack[i] ?? '...',
                     style: TextStyle(
                       fontSize: 13,
-                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 4, vertical: 2),
-                child: Text(
-                  routeStack[i] ?? '...',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
