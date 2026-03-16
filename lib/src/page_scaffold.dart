@@ -286,6 +286,15 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   showTitle: widget.showTitle,
                   showTabs: widget.showTabs,
                   tabBarBuilder: widget.tabBarBuilder,
+                  breadcrumb: widget.contentNavigator && _stackDepth > 0
+                      ? _BreadcrumbBar(
+                          rootLabel: widget.tabs![_selectedIndex].label,
+                          routeStack: _navigatorObserver.routeStack,
+                          onPopToRoot: () => _navigatorKey.currentState!
+                              .popUntil((route) => route.isFirst),
+                          onPopToDepth: _popToDepth,
+                        )
+                      : null,
                 )
               else if (showBar && !hasTabs)
                 _TitleArea(
@@ -293,8 +302,17 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   description: widget.description,
                   icon: widget.icon,
                   actions: widget.actions,
+                  breadcrumb: widget.contentNavigator && _stackDepth > 0
+                      ? _BreadcrumbBar(
+                          rootLabel: 'Home',
+                          routeStack: _navigatorObserver.routeStack,
+                          onPopToRoot: () => _navigatorKey.currentState!
+                              .popUntil((route) => route.isFirst),
+                          onPopToDepth: _popToDepth,
+                        )
+                      : null,
                 ),
-              if (widget.contentNavigator && _stackDepth > 0)
+              if (!showBar && widget.contentNavigator && _stackDepth > 0)
                 _BreadcrumbBar(
                   rootLabel: widget.tabs != null
                       ? widget.tabs![_selectedIndex].label
@@ -303,9 +321,8 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   onPopToRoot: () => _navigatorKey.currentState!
                       .popUntil((route) => route.isFirst),
                   onPopToDepth: _popToDepth,
-                )
-              else if (showBar)
-                const SizedBox(height: 16),
+                ),
+              if (showBar) const SizedBox(height: 16),
               Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -391,6 +408,7 @@ class _UnifiedBar extends StatelessWidget {
   final bool showTitle;
   final bool showTabs;
   final TabBarBuilder? tabBarBuilder;
+  final Widget? breadcrumb;
 
   const _UnifiedBar({
     required this.title,
@@ -403,6 +421,7 @@ class _UnifiedBar extends StatelessWidget {
     required this.showTitle,
     required this.showTabs,
     this.tabBarBuilder,
+    this.breadcrumb,
   });
 
   @override
@@ -418,8 +437,13 @@ class _UnifiedBar extends StatelessWidget {
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
         children: [
           if (showTitle) ...[
             if (icon != null) ...[
@@ -493,6 +517,10 @@ class _UnifiedBar extends StatelessWidget {
                 ],
               ],
             ),
+        ],
+      ),
+          ),
+          if (breadcrumb != null) breadcrumb!,
         ],
       ),
     );
@@ -599,12 +627,14 @@ class _TitleArea extends StatelessWidget {
   final String? description;
   final IconData? icon;
   final List<Widget>? actions;
+  final Widget? breadcrumb;
 
   const _TitleArea({
     required this.title,
     this.description,
     this.icon,
     this.actions,
+    this.breadcrumb,
   });
 
   @override
@@ -612,69 +642,79 @@ class _TitleArea extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (icon != null) ...[
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                  Row(
+                    children: [
+                      if (icon != null) ...[
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: colorScheme.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                          height: 1.2,
+                        ),
                       ),
-                      child: Icon(
-                        icon,
-                        color: colorScheme.primary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
-                      height: 1.2,
-                    ),
+                    ],
                   ),
+                  if (description != null) ...[
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: EdgeInsets.only(left: icon != null ? 48 : 0),
+                      child: Text(
+                        description!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
-              if (description != null) ...[
-                const SizedBox(height: 6),
-                Padding(
-                  padding: EdgeInsets.only(left: icon != null ? 48 : 0),
-                  child: Text(
-                    description!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
+            ),
+            if (actions != null && actions!.isNotEmpty)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (int i = 0; i < actions!.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    actions![i],
+                  ],
+                ],
+              ),
+          ],
         ),
-        if (actions != null && actions!.isNotEmpty)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (int i = 0; i < actions!.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
-                actions![i],
-              ],
-            ],
-          ),
+        if (breadcrumb != null) ...[
+          const SizedBox(height: 8),
+          breadcrumb!,
+        ],
       ],
     );
   }
