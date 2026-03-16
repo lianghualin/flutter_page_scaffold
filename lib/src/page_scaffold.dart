@@ -177,6 +177,10 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
   late final _ContentNavigatorObserver _navigatorObserver;
   int get _stackDepth => _navigatorObserver.depth;
   String? get _currentRouteTitle => _navigatorObserver.currentTitle;
+  bool get _shouldShowBackBar =>
+      widget.contentNavigator &&
+      !widget.contentNavigatorShowTabs &&
+      _stackDepth > 0;
 
   @override
   void initState() {
@@ -273,7 +277,13 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (showBar && hasTabs)
+              if (_shouldShowBackBar)
+                _BackButtonBar(
+                  title: _currentRouteTitle ?? widget.title,
+                  onBack: () => _navigatorKey.currentState!.pop(),
+                  actions: widget.actions,
+                )
+              else if (showBar && hasTabs)
                 _UnifiedBar(
                   title: widget.title,
                   description: widget.description,
@@ -285,15 +295,15 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                   showTitle: widget.showTitle,
                   showTabs: widget.showTabs,
                   tabBarBuilder: widget.tabBarBuilder,
-                ),
-              if (showBar && !hasTabs)
+                )
+              else if (showBar && !hasTabs)
                 _TitleArea(
                   title: widget.title,
                   description: widget.description,
                   icon: widget.icon,
                   actions: widget.actions,
                 ),
-              if (showBar) const SizedBox(height: 16),
+              if (_shouldShowBackBar || showBar) const SizedBox(height: 16),
               Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
@@ -667,6 +677,85 @@ class _TitleArea extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+class _BackButtonBar extends StatelessWidget {
+  final String title;
+  final VoidCallback onBack;
+  final List<Widget>? actions;
+
+  const _BackButtonBar({
+    required this.title,
+    required this.onBack,
+    this.actions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: onBack,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.arrow_back,
+                    size: 20,
+                    color: colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Back',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const Spacer(),
+          if (actions != null && actions!.isNotEmpty)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (int i = 0; i < actions!.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  actions![i],
+                ],
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

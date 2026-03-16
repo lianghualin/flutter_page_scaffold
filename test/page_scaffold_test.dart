@@ -860,5 +860,250 @@ void main() {
 
       expect(find.text('Action'), findsOneWidget);
     });
+
+    testWidgets('Option B: tabs hidden when sub-page pushed, back button shown', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Option B',
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Detail View'),
+                      builder: (_) => const Text('detail content'),
+                    ),
+                  ),
+                  child: const Text('Go detail'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      expect(find.text('Tab A'), findsOneWidget);
+      expect(find.text('Tab B'), findsOneWidget);
+
+      await tester.tap(find.text('Go detail'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tab A'), findsNothing);
+      expect(find.text('Tab B'), findsNothing);
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Detail View'), findsOneWidget);
+      expect(find.text('detail content'), findsOneWidget);
+    });
+
+    testWidgets('Option B: back button pops one level', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Option B Pop',
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Detail'),
+                      builder: (_) => const Text('detail content'),
+                    ),
+                  ),
+                  child: const Text('Go detail'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Go detail'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tab A'), findsOneWidget);
+      expect(find.text('Tab B'), findsOneWidget);
+      expect(find.text('Go detail'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back), findsNothing);
+    });
+
+    testWidgets('Option B: null RouteSettings.name falls back to original title', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Fallback Title',
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Text('no-name detail'),
+                    ),
+                  ),
+                  child: const Text('Go'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Fallback Title'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+    });
+
+    testWidgets('Option B: actions remain visible during sub-page', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Option B Actions',
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          actions: [
+            ElevatedButton(onPressed: () {}, child: const Text('Action')),
+          ],
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Detail'),
+                      builder: (_) => const Text('detail'),
+                    ),
+                  ),
+                  child: const Text('Go'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Action'), findsOneWidget);
+    });
+
+    testWidgets('Option B: non-tabbed mode shows back button on push', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Non-tabbed B',
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          child: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  settings: const RouteSettings(name: 'Sub Page'),
+                  builder: (_) => const Text('sub content'),
+                ),
+              ),
+              child: const Text('Push'),
+            ),
+          ),
+        ),
+      ));
+
+      await tester.tap(find.text('Push'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Sub Page'), findsOneWidget);
+      expect(find.text('sub content'), findsOneWidget);
+    });
+
+    testWidgets('Option B: back button appears even when showTitle is false', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Hidden Title',
+          showTitle: false,
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Detail'),
+                      builder: (_) => const Text('detail'),
+                    ),
+                  ),
+                  child: const Text('Go'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Detail'), findsOneWidget);
+    });
+
+    testWidgets('Option B: icon is not shown during sub-page navigation', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'With Icon',
+          icon: Icons.router,
+          contentNavigator: true,
+          contentNavigatorShowTabs: false,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Detail'),
+                      builder: (_) => const Text('detail'),
+                    ),
+                  ),
+                  child: const Text('Go'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      expect(find.byIcon(Icons.router), findsOneWidget);
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.router), findsNothing);
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+    });
   });
 }
