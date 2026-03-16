@@ -554,5 +554,90 @@ void main() {
       expect(navigators.length, 1);
       expect(find.text('child content'), findsOneWidget);
     });
+
+    testWidgets('Navigator.push renders sub-page inside content area', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Push Test',
+          contentNavigator: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'Detail Page'),
+                      builder: (_) => const Text('detail content'),
+                    ),
+                  ),
+                  child: const Text('Go to detail'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      expect(find.text('Go to detail'), findsOneWidget);
+
+      await tester.tap(find.text('Go to detail'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('detail content'), findsOneWidget);
+      expect(find.text('Push Test'), findsOneWidget);
+    });
+
+    testWidgets('Navigator.push in non-tabbed mode stays in content area', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Non-tabbed Push',
+          contentNavigator: true,
+          child: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const Text('pushed content'),
+                ),
+              ),
+              child: const Text('Push'),
+            ),
+          ),
+        ),
+      ));
+
+      await tester.tap(find.text('Push'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('pushed content'), findsOneWidget);
+      expect(find.text('Non-tabbed Push'), findsOneWidget);
+    });
+
+    testWidgets('Navigator.pop at root is rejected', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Pop Root',
+          contentNavigator: true,
+          tabs: const [
+            PageTab(label: 'Tab A', child: Text('root content')),
+          ],
+        ),
+      ));
+
+      expect(find.text('root content'), findsOneWidget);
+
+      final navigatorState = tester.state<NavigatorState>(
+        find.descendant(
+          of: find.byType(MainAreaTemplate),
+          matching: find.byType(Navigator),
+        ),
+      );
+      navigatorState.maybePop();
+      await tester.pumpAndSettle();
+
+      expect(find.text('root content'), findsOneWidget);
+    });
   });
 }
