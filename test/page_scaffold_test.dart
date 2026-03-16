@@ -755,5 +755,110 @@ void main() {
       expect(find.text('level 3'), findsNothing);
       expect(find.text('level 2'), findsNothing);
     });
+
+    testWidgets('Option A: tabs remain visible when sub-page is pushed', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Option A',
+          contentNavigator: true,
+          contentNavigatorShowTabs: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Text('sub-page'),
+                    ),
+                  ),
+                  child: const Text('Navigate'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Navigate'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('sub-page'), findsOneWidget);
+      expect(find.text('Tab A'), findsOneWidget);
+      expect(find.text('Tab B'), findsOneWidget);
+      expect(find.text('Option A'), findsOneWidget);
+    });
+
+    testWidgets('Option A: tab switch from sub-page works', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Option A Switch',
+          contentNavigator: true,
+          contentNavigatorShowTabs: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Text('sub-page A'),
+                    ),
+                  ),
+                  child: const Text('Navigate A'),
+                ),
+              ),
+            ),
+            const PageTab(label: 'Tab B', child: Text('content B')),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Navigate A'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tab B'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('content B'), findsOneWidget);
+      expect(find.text('sub-page A'), findsNothing);
+    });
+
+    testWidgets('Option A: actions remain visible when sub-page is pushed', (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Option A Actions',
+          contentNavigator: true,
+          contentNavigatorShowTabs: true,
+          actions: [
+            ElevatedButton(onPressed: () {}, child: const Text('Action')),
+          ],
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Text('sub-page'),
+                    ),
+                  ),
+                  child: const Text('Navigate'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      await tester.tap(find.text('Navigate'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Action'), findsOneWidget);
+    });
   });
 }
