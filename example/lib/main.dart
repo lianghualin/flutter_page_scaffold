@@ -102,7 +102,6 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
   bool _animate = false;
   bool _showCard = true;
   bool _contentNavigator = false;
-  bool _contentNavigatorShowTabs = true;
 
   ThemeData get _themeData {
     switch (_currentTheme) {
@@ -139,8 +138,6 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
               onShowCardChanged: (v) => setState(() => _showCard = v),
               contentNavigator: _contentNavigator,
               onContentNavigatorChanged: (v) => setState(() => _contentNavigator = v),
-              contentNavigatorShowTabs: _contentNavigatorShowTabs,
-              onContentNavigatorShowTabsChanged: (v) => setState(() => _contentNavigatorShowTabs = v),
             ),
             Expanded(
               child: MainAreaTemplate(
@@ -152,7 +149,6 @@ class _PlaygroundAppState extends State<PlaygroundApp> {
                 maintainState: _maintainState,
                 showCard: _showCard,
                 contentNavigator: _contentNavigator,
-                contentNavigatorShowTabs: _contentNavigatorShowTabs,
                 tabTransitionDuration: _animate
                     ? const Duration(milliseconds: 200)
                     : null,
@@ -208,8 +204,6 @@ class _ControlBar extends StatelessWidget {
   final ValueChanged<bool> onShowCardChanged;
   final bool contentNavigator;
   final ValueChanged<bool> onContentNavigatorChanged;
-  final bool contentNavigatorShowTabs;
-  final ValueChanged<bool> onContentNavigatorShowTabsChanged;
 
   const _ControlBar({
     required this.currentTheme,
@@ -226,8 +220,6 @@ class _ControlBar extends StatelessWidget {
     required this.onShowCardChanged,
     required this.contentNavigator,
     required this.onContentNavigatorChanged,
-    required this.contentNavigatorShowTabs,
-    required this.onContentNavigatorShowTabsChanged,
   });
 
   static const _themes = [
@@ -302,12 +294,6 @@ class _ControlBar extends StatelessWidget {
             label: 'Navigator',
             value: contentNavigator,
             onChanged: onContentNavigatorChanged,
-          ),
-          const SizedBox(width: 8),
-          _ToggleChip(
-            label: 'Nav Tabs',
-            value: contentNavigatorShowTabs,
-            onChanged: onContentNavigatorShowTabsChanged,
           ),
 
           const Spacer(),
@@ -473,12 +459,7 @@ class TableDemoContent extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       settings: const RouteSettings(name: 'Device Detail'),
-                      builder: (_) => const Center(
-                        child: Text(
-                          'Device Detail Page\n(pushed via contentNavigator)',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                      builder: (_) => const _DeviceDetailPage(),
                     ),
                   );
                 },
@@ -758,6 +739,415 @@ class _PaginationButton extends StatelessWidget {
         icon,
         size: 18,
         color: enabled ? colorScheme.onSurface : colorScheme.outlineVariant,
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Nested Navigation Pages (pushed via contentNavigator)
+// ===========================================================================
+
+class _DeviceDetailPage extends StatelessWidget {
+  const _DeviceDetailPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        MainAreaSection(
+          label: 'DEVICE INFO',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.router, size: 32, color: colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SW-Core-01',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        '192.168.1.1 · L3 Switch · 48 ports',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          settings: const RouteSettings(name: 'Port Configuration'),
+                          builder: (_) => const _PortConfigPage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.settings_ethernet, size: 16),
+                    label: const Text('Port Config'),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          settings: const RouteSettings(name: 'Traffic Monitor'),
+                          builder: (_) => const _TrafficMonitorPage(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.show_chart, size: 16),
+                    label: const Text('Traffic Monitor'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        MainAreaSection(
+          label: 'STATUS',
+          expanded: true,
+          child: Column(
+            children: [
+              _InfoRow(label: 'Status', value: 'Online', valueColor: colorScheme.tertiary),
+              _InfoRow(label: 'Uptime', value: '47 days 12h 33m'),
+              _InfoRow(label: 'CPU', value: '23%'),
+              _InfoRow(label: 'Memory', value: '4.2 GB / 8 GB'),
+              _InfoRow(label: 'Firmware', value: 'v4.1.3'),
+              _InfoRow(label: 'Domain', value: 'Core · VLAN-100'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PortConfigPage extends StatelessWidget {
+  const _PortConfigPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        MainAreaSection(
+          label: 'PORT LIST',
+          child: Column(
+            children: [
+              for (int i = 0; i < 6; i++)
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        settings: RouteSettings(name: 'Port Gi0/${i + 1}'),
+                        builder: (_) => _PortDetailPage(portIndex: i + 1),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: colorScheme.outline.withValues(alpha: 0.5),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          i < 4 ? Icons.circle : Icons.circle_outlined,
+                          size: 10,
+                          color: i < 4 ? colorScheme.tertiary : colorScheme.outlineVariant,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Gi0/${i + 1}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          i < 4 ? '1 Gbps · Up' : 'Down',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: i < 4 ? colorScheme.onSurfaceVariant : colorScheme.outlineVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right, size: 18, color: colorScheme.onSurfaceVariant),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PortDetailPage extends StatelessWidget {
+  final int portIndex;
+  const _PortDetailPage({required this.portIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isUp = portIndex <= 4;
+
+    return Column(
+      children: [
+        MainAreaSection(
+          label: 'PORT DETAILS',
+          child: Column(
+            children: [
+              _InfoRow(
+                label: 'Status',
+                value: isUp ? 'Up' : 'Down',
+                valueColor: isUp ? colorScheme.tertiary : colorScheme.error,
+              ),
+              _InfoRow(label: 'Speed', value: isUp ? '1 Gbps' : 'N/A'),
+              _InfoRow(label: 'Duplex', value: isUp ? 'Full' : 'N/A'),
+              _InfoRow(label: 'VLAN', value: 'VLAN-100 (trunk)'),
+              _InfoRow(label: 'MTU', value: '9000'),
+              _InfoRow(label: 'Description', value: 'Uplink to SW-Core-02'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrafficMonitorPage extends StatelessWidget {
+  const _TrafficMonitorPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        MainAreaSection(
+          label: 'TRAFFIC SUMMARY',
+          child: Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  label: 'Inbound',
+                  value: '842 Mbps',
+                  icon: Icons.arrow_downward,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _MetricCard(
+                  label: 'Outbound',
+                  value: '631 Mbps',
+                  icon: Icons.arrow_upward,
+                  color: colorScheme.secondary,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _MetricCard(
+                  label: 'Errors',
+                  value: '0.02%',
+                  icon: Icons.error_outline,
+                  color: colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        MainAreaSection(
+          label: 'TOP TALKERS',
+          expanded: true,
+          child: Column(
+            children: [
+              for (final entry in [
+                ('10.0.20.15', 'Web Server', '312 Mbps'),
+                ('10.0.20.22', 'Database', '198 Mbps'),
+                ('10.0.10.5', 'AP Controller', '87 Mbps'),
+                ('10.0.30.1', 'IoT Gateway', '45 Mbps'),
+              ])
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: colorScheme.outline.withValues(alpha: 0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          entry.$1,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          entry.$2,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        entry.$3,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: valueColor ?? colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }
