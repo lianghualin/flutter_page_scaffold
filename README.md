@@ -204,6 +204,26 @@ MainAreaTemplate(
 - Set `RouteSettings(name: 'Page Title')` on your routes to label breadcrumb segments
 - Works in both tabbed and non-tabbed modes (root label shows tab name or "Home")
 
+**Cycle detection:** When pages can navigate to each other (e.g., a network topology), use `PageScaffoldScope.routeStack` to detect cycles and pop back instead of pushing duplicates:
+
+```dart
+void onItemTap(BuildContext context, String name) {
+  final scope = PageScaffoldScope.maybeOf(context);
+  if (scope?.routeStack.contains(name) ?? false) {
+    // Already in stack — pop back to it
+    Navigator.popUntil(context, (route) => route.settings.name == name);
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        settings: RouteSettings(name: name),
+        builder: (_) => DetailPage(name: name),
+      ),
+    );
+  }
+}
+```
+
 ### Visibility control
 
 The unified bar responds to `showTitle` and `showTabs` independently:
@@ -285,6 +305,9 @@ final scope = PageScaffoldScope.maybeOf(context);
 if (scope != null && !scope.showCard) {
   // card-free mode — sections use surface color with shadow
 }
+
+// Access the contentNavigator route stack for cycle detection
+final routeStack = scope?.routeStack ?? [];
 ```
 
 ## Theme Integration

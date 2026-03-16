@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Inherited widget that exposes [MainAreaTemplate] configuration to descendants.
@@ -8,9 +9,18 @@ class PageScaffoldScope extends InheritedWidget {
   /// Whether the parent [MainAreaTemplate] wraps content in a card container.
   final bool showCard;
 
+  /// The current navigation route stack when [MainAreaTemplate.contentNavigator]
+  /// is enabled. Each entry is the `RouteSettings.name` of a pushed sub-page.
+  /// Empty list when contentNavigator is disabled or at root depth.
+  ///
+  /// Useful for cycle detection — check if a route name already exists in the
+  /// stack before pushing, and `popUntil` instead to avoid infinite loops.
+  final List<String?> routeStack;
+
   const PageScaffoldScope({
     super.key,
     required this.showCard,
+    this.routeStack = const [],
     required super.child,
   });
 
@@ -21,7 +31,8 @@ class PageScaffoldScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(PageScaffoldScope oldWidget) {
-    return showCard != oldWidget.showCard;
+    return showCard != oldWidget.showCard ||
+        !listEquals(routeStack, oldWidget.routeStack);
   }
 }
 
@@ -267,6 +278,9 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
 
     return PageScaffoldScope(
       showCard: widget.showCard,
+      routeStack: widget.contentNavigator
+          ? _navigatorObserver.routeStack
+          : const [],
       child: Material(
         color: theme.scaffoldBackgroundColor,
         child: Padding(

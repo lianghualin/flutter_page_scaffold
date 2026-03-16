@@ -1,3 +1,9 @@
+## 0.6.2
+
+### Added
+- `PageScaffoldScope.routeStack` — exposes the contentNavigator route stack to descendants via `InheritedWidget`
+- Enables cycle detection: check if a route name already exists before pushing, and `popUntil` instead to avoid infinite navigation loops
+
 ## 0.6.1
 
 ### Improved

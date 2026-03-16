@@ -1247,5 +1247,105 @@ void main() {
       expect(find.text('Page One'), findsNothing);
       expect(find.text('replaced content'), findsOneWidget);
     });
+
+    testWidgets('PageScaffoldScope.routeStack is empty when contentNavigator is false', (tester) async {
+      List<String?>? capturedStack;
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'No Nav',
+          contentNavigator: false,
+          child: Builder(
+            builder: (context) {
+              capturedStack = PageScaffoldScope.maybeOf(context)?.routeStack;
+              return const Text('content');
+            },
+          ),
+        ),
+      ));
+
+      expect(capturedStack, isEmpty);
+    });
+
+    testWidgets('PageScaffoldScope.routeStack is empty at depth 0', (tester) async {
+      List<String?>? capturedStack;
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Nav',
+          contentNavigator: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) {
+                  capturedStack = PageScaffoldScope.maybeOf(context)?.routeStack;
+                  return const Text('content');
+                },
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      expect(capturedStack, isEmpty);
+    });
+
+    testWidgets('PageScaffoldScope.routeStack updates when sub-pages are pushed', (tester) async {
+      List<String?>? capturedStack;
+      await tester.pumpWidget(wrapWithMaterial(
+        MainAreaTemplate(
+          title: 'Stack Test',
+          contentNavigator: true,
+          tabs: [
+            PageTab(
+              label: 'Tab A',
+              child: Builder(
+                builder: (context) {
+                  capturedStack = PageScaffoldScope.maybeOf(context)?.routeStack;
+                  return ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: 'Page One'),
+                        builder: (ctx) => Builder(
+                          builder: (innerCtx) {
+                            capturedStack = PageScaffoldScope.maybeOf(innerCtx)?.routeStack;
+                            return ElevatedButton(
+                              onPressed: () => Navigator.push(
+                                ctx,
+                                MaterialPageRoute(
+                                  settings: const RouteSettings(name: 'Page Two'),
+                                  builder: (_) => Builder(
+                                    builder: (deepCtx) {
+                                      capturedStack = PageScaffoldScope.maybeOf(deepCtx)?.routeStack;
+                                      return const Text('deep');
+                                    },
+                                  ),
+                                ),
+                              ),
+                              child: const Text('Go deeper'),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    child: const Text('Go'),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ));
+
+      expect(capturedStack, isEmpty);
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+      expect(capturedStack, equals(['Page One']));
+
+      await tester.tap(find.text('Go deeper'));
+      await tester.pumpAndSettle();
+      expect(capturedStack, equals(['Page One', 'Page Two']));
+    });
   });
 }
