@@ -306,9 +306,8 @@ class _MainAreaTemplateState extends State<MainAreaTemplate>
                     ),
                     if (widget.contentNavigator && _stackDepth > 0)
                       Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
+                        left: 20,
+                        bottom: 7,
                         child: _BreadcrumbBar(
                           rootLabel: widget.tabs != null
                               ? widget.tabs![_selectedIndex].label
@@ -710,10 +709,16 @@ class _BreadcrumbBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outline, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -722,33 +727,29 @@ class _BreadcrumbBar extends StatelessWidget {
             InkWell(
               onTap: onPopToRoot,
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.arrow_back,
-                        size: 16, color: colorScheme.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      rootLabel,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.primary,
-                      ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.arrow_back,
+                      size: 14, color: colorScheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    rootLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.primary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             for (int i = 0; i < routeStack.length; i++) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Text(
                   '/',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     color: colorScheme.outlineVariant,
                   ),
                 ),
@@ -757,29 +758,21 @@ class _BreadcrumbBar extends StatelessWidget {
                 InkWell(
                   onTap: () => onPopToDepth(i + 1),
                   borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4, vertical: 2),
-                    child: Text(
-                      routeStack[i] ?? '...',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.primary,
-                      ),
+                  child: Text(
+                    routeStack[i] ?? '...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.primary,
                     ),
                   ),
                 )
               else
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 4, vertical: 2),
-                  child: Text(
-                    routeStack[i] ?? '...',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
+                Text(
+                  routeStack[i] ?? '...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
                   ),
                 ),
             ],
