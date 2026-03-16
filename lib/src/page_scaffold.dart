@@ -664,35 +664,38 @@ class _TitleArea extends StatelessWidget {
 
 class _ContentNavigatorObserver extends NavigatorObserver {
   final VoidCallback onStackChanged;
-  int _depth = 0;
-  String? _currentTitle;
+  final List<String?> _routeStack = [];
 
   _ContentNavigatorObserver({required this.onStackChanged});
 
-  int get depth => _depth;
-  String? get currentTitle => _currentTitle;
+  int get depth => _routeStack.length;
+  String? get currentTitle => _routeStack.lastOrNull;
+  List<String?> get routeStack => List.unmodifiable(_routeStack);
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     if (previousRoute != null) {
-      _depth++;
-      _currentTitle = route.settings.name;
+      _routeStack.add(route.settings.name);
       onStackChanged();
     }
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _depth--;
-    if (_depth < 0) _depth = 0;
-    _currentTitle = _depth > 0 ? previousRoute?.settings.name : null;
+    if (_routeStack.isNotEmpty) _routeStack.removeLast();
     onStackChanged();
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _depth--;
-    if (_depth < 0) _depth = 0;
+    if (_routeStack.isNotEmpty) _routeStack.removeLast();
+    onStackChanged();
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (_routeStack.isNotEmpty) _routeStack.removeLast();
+    _routeStack.add(newRoute?.settings.name);
     onStackChanged();
   }
 }
